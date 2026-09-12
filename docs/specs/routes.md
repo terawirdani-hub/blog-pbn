@@ -21,8 +21,8 @@ Pretty URLs require Apache rewrite or `php -S ... router.php`.
 
 | Path | Roles |
 |------|--------|
-| `/admin/setup.php` | Unauthenticated, only if zero users |
-| `/admin/index.php` | Login or dashboard |
+| `/admin/` or `/admin/index.php` | Login form (if signed out) or dashboard. There is **no** `/admin/login.php`. |
+| `/admin/setup.php` | First-run wizard only when the users table is empty |
 | `/admin/logout.php` | Any logged-in |
 | `/admin/posts.php`, `post-edit.php` | admin, editor |
 | `/admin/categories.php` | admin, editor |

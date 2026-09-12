@@ -160,3 +160,27 @@ function admin_count(): int
 {
     return (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 }
+
+function ensure_default_admin(bool $resetPassword = false): void
+{
+    $username = 'admin';
+    $password = 'password123';
+    $st = db()->prepare('SELECT id FROM users WHERE username = ?');
+    $st->execute([$username]);
+    $existing = $st->fetch();
+    $now = now_utc();
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    if ($existing) {
+        if ($resetPassword) {
+            db()->prepare('UPDATE users SET password_hash = ?, role = ?, updated_at = ? WHERE id = ?')
+                ->execute([$hash, 'admin', $now, (int) $existing['id']]);
+            db()->prepare('DELETE FROM login_attempts WHERE username = ?')->execute([strtolower($username)]);
+        }
+        return;
+    }
+    db()->prepare(
+        'INSERT INTO users (username, password_hash, role, locale, theme, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)'
+    )->execute([$username, $hash, 'admin', 'id', 'dark', $now, $now]);
+    db()->prepare('DELETE FROM login_attempts WHERE username = ?')->execute([strtolower($username)]);
+}

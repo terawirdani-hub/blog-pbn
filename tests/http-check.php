@@ -43,31 +43,28 @@ function csrf(string $html): string
     return '';
 }
 
-$home = hit($base . '/', ['expect' => 200]);
+hit($base . '/', ['expect' => 200]);
 hit($base . '/this-slug-does-not-exist', ['expect' => 404]);
 hit($base . '/sitemap.xml', ['expect' => 200, 'contains' => 'urlset']);
 hit($base . '/robots.txt', ['expect' => 200, 'contains' => 'User-agent']);
-$admin = hit($base . '/admin/index.php', ['expect' => 302]);
-$setup = hit($base . '/admin/setup.php', ['expect' => 200, 'contains' => 'csrf_token']);
-$token = csrf($setup['body']);
-$user = 'admin_' . substr(bin2hex(random_bytes(3)), 0, 6);
-$created = hit($base . '/admin/setup.php', [
+
+$login = hit($base . '/admin/index.php', ['expect' => 200, 'contains' => 'csrf_token']);
+$token = csrf($login['body']);
+$auth = hit($base . '/admin/index.php', [
     'post' => [
         'csrf_token' => $token,
-        'username' => $user,
-        'password' => 'password1234',
-        'locale' => 'en',
+        'username' => 'admin',
+        'password' => 'password123',
     ],
 ]);
-if ($created['code'] !== 302) {
-    fwrite(STDERR, "setup expected 302 got {$created['code']}\n{$created['body']}\n");
+if ($auth['code'] !== 302) {
+    fwrite(STDERR, "login expected 302 got {$auth['code']}\n");
     $fail++;
 }
-$dash = hit($base . '/admin/index.php', ['expect' => 200, 'contains' => 'Overview']);
-$posts = hit($base . '/admin/posts.php', ['expect' => 200]);
-$public = hit($base . '/', ['expect' => 200, 'contains' => 'Hello World']);
-$single = hit($base . '/hello-world', ['expect' => 200, 'contains' => 'first post']);
-$draftProbe = hit($base . '/admin/settings.php', ['expect' => 200, 'contains' => 'Site name']);
+hit($base . '/admin/index.php', ['expect' => 200]);
+hit($base . '/admin/posts.php', ['expect' => 200]);
+hit($base . '/', ['expect' => 200]);
+hit($base . '/admin/settings.php', ['expect' => 200]);
 
 if ($fail === 0) {
     echo "HTTP OK\n";

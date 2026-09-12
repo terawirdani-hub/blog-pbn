@@ -29,7 +29,7 @@ Public front controller: `index.php`. Shared PHP: `includes/`. Admin pages: `adm
 php -S localhost:8080 router.php
 ```
 
-Open `/admin` and complete setup. Do not commit `database/data.sqlite`, `uploads/*` (except placeholders), or secrets.
+Open `/admin` (login is `/admin` or `/admin/index.php`, not `/admin/login.php`). Default user `admin` / `password123` is seeded if missing. Do not commit `database/data.sqlite`, `uploads/*` (except placeholders), or extra secrets.
 
 ## Deploy
 
