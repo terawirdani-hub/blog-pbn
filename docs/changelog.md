@@ -10,3 +10,4 @@
 - Post SEO fields: focus keyword, title/description counters, schema type, index/noindex, custom canonical.
 - 30 homepage templates (5 layouts × 6 palettes) selectable in Settings → Appearance (`active_template` 01–30).
 - Site SEO tab: homepage meta title/description/keywords, default OG image, Google/Bing verification, live sitemap/RSS shortcuts.
+- Appearance tab: explicit 30-preset catalog (`t01`–`t30`) in a grouped dropdown, save button with hint row, `?status=success` success alert, and `tab=tampilan` accepted as an alias for `tab=appearance`.

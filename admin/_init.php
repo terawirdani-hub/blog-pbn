@@ -30,6 +30,7 @@ function admin_layout_start(string $title, string $active = ''): void
         $theme = 'dark';
     }
     $flash = flash_get();
+    $GLOBALS['admin_flash_shown'] = $flash !== null;
     header('Content-Type: text/html; charset=utf-8');
     $primary = setting('primary_color', '#1f6feb');
     $accent = setting('accent_color', '#238636');

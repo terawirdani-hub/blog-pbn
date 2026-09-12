@@ -147,6 +147,31 @@ $applied = apply_template_id('22');
 if (($applied['active_template'] ?? '') !== '22' || ($applied['homepage_layout'] ?? '') !== 'newspaper') {
     fail('apply_template_id 22');
 }
+foreach ($presets as $key => $preset) {
+    $presetId = (string) ($preset['id'] ?? '');
+    if ($presetId === '' || $presetId !== (string) $key || strlen($presetId) !== 2) {
+        fail('preset id for key ' . (string) $key);
+    }
+    if (($preset['code'] ?? '') !== 't' . $presetId) {
+        fail('preset code for ' . $presetId);
+    }
+}
+if (active_template_id() === '') {
+    fail('active_template_id should never be empty');
+}
+$grouped = theme_presets_by_layout();
+if (count($grouped) !== 5) {
+    fail('preset groups should be 5');
+}
+foreach ($grouped as $layoutKey => $group) {
+    if (count($group) !== 6) {
+        fail('layout ' . $layoutKey . ' should have 6 palettes');
+    }
+}
+$fromCode = resolve_template_from_post(['template_preset' => 't28']);
+if (($fromCode['active_template'] ?? '') !== '28' || ($fromCode['color_palette'] ?? '') !== 'violet') {
+    fail('resolve template code t28');
+}
 $tok = seo_verification_token('<meta name="google-site-verification" content="AbC_12-3">');
 if ($tok !== 'AbC_12-3') {
     fail('seo verification parse');

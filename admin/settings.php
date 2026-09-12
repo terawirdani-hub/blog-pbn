@@ -4,11 +4,19 @@ declare(strict_types=1);
 require __DIR__ . '/_init.php';
 $user = require_role('admin');
 
-$tab = (string) ($_GET['tab'] ?? 'general');
 $allowedTabs = ['general', 'appearance', 'author', 'ads', 'tracking', 'seo'];
-if (!in_array($tab, $allowedTabs, true)) {
-    $tab = 'general';
+
+/** Accepts the English keys plus the Indonesian alias used in older links. */
+function settings_tab(string $requested): string
+{
+    global $allowedTabs;
+    $aliases = ['tampilan' => 'appearance', 'umum' => 'general', 'penulis' => 'author', 'iklan' => 'ads'];
+    $requested = $aliases[$requested] ?? $requested;
+    return in_array($requested, $allowedTabs, true) ? $requested : 'general';
 }
+
+$tab = settings_tab((string) ($_GET['tab'] ?? 'general'));
+$saved = ($_GET['status'] ?? '') === 'success';
 
 function apply_branding_from_post(int $uid, array &$changed): void
 {
@@ -51,9 +59,9 @@ function apply_branding_from_post(int $uid, array &$changed): void
 $error = '';
 if (is_post()) {
     csrf_verify();
-    $tab = (string) ($_POST['tab'] ?? 'general');
-    if (!in_array($tab, $allowedTabs, true)) {
-        $tab = 'general';
+    $tab = settings_tab((string) ($_POST['tab'] ?? 'general'));
+    if (isset($_POST['save_appearance'])) {
+        $tab = 'appearance';
     }
     try {
         $changed = [];
@@ -75,8 +83,7 @@ if (is_post()) {
                 setting_set($k, $v, $uid);
             }
             apply_branding_from_post($uid, $changed);
-        } elseif ($tab === 'appearance' || isset($_POST['save_appearance'])) {
-            $tab = 'appearance';
+        } elseif ($tab === 'appearance') {
             $publicTheme = ($_POST['public_theme'] ?? 'light') === 'dark' ? 'dark' : 'light';
             $map = resolve_template_from_post($_POST);
             $map['public_theme'] = $publicTheme;
@@ -181,7 +188,7 @@ if (is_post()) {
             audit_write('settings.update', 'settings', $tab, ['keys' => $changed]);
         }
         flash_set('success', t('flash.saved'));
-        redirect(admin_url('settings.php?tab=' . rawurlencode($tab)));
+        redirect(admin_url('settings.php?tab=' . rawurlencode($tab) . '&status=success'));
     } catch (Throwable $e) {
         error_log($e->getMessage());
         $error = $e instanceof RuntimeException ? $e->getMessage() : t('error.generic');
@@ -206,7 +213,10 @@ admin_layout_start(t('settings.title'), 'settings');
     <?= tab_link('seo', $tab) ?>
 </nav>
 <?php if ($error): ?><p class="flash flash-error"><?= h($error) ?></p><?php endif; ?>
-<form method="post" enctype="multipart/form-data">
+<?php if ($saved && empty($GLOBALS['admin_flash_shown'])): ?>
+    <p class="flash flash-success"><?= h(t('flash.saved')) ?></p>
+<?php endif; ?>
+<form method="post" action="" enctype="multipart/form-data">
     <?= csrf_field() ?>
     <input type="hidden" name="tab" value="<?= h($tab) ?>">
     <?php if ($tab === 'general'): ?>
@@ -242,36 +252,29 @@ admin_layout_start(t('settings.title'), 'settings');
         <div class="settings-grid">
             <section class="card" style="grid-column: 1 / -1">
                 <h2><?= h(t('settings.card.templates')) ?></h2>
+                <?php
+                $all_templates = theme_presets_by_layout();
+                $selectedPreset = current_template_preset_id();
+                ?>
                 <div class="field">
                     <label><?= field_label('settings.template_preset', 'template_preset') ?></label>
-                    <?php
-                    $selectedPreset = current_template_preset_id();
-                    $presetGroups = [];
-                    foreach (theme_presets() as $id => $preset) {
-                        $presetGroups[$preset['layout']][$id] = $preset;
-                    }
-                    ?>
-                    <select name="template_preset" id="template-preset" class="template-preset-select" size="12">
-                        <?php
-                        $layoutIndex = 1;
-                        foreach ($presetGroups as $layoutKey => $group):
-                        ?>
+                    <select name="template_preset" id="template-preset" class="template-preset-select">
+                        <?php $layoutIndex = 1; ?>
+                        <?php foreach ($all_templates as $layoutKey => $group): ?>
                             <optgroup label="<?= h(t('settings.layout_group', ['n' => (string) $layoutIndex, 'layout' => t('settings.layout.' . $layoutKey)])) ?>">
-                                <?php foreach ($group as $id => $preset): ?>
-                                    <option value="<?= h($id) ?>" <?= $selectedPreset === $id ? 'selected' : '' ?>
+                                <?php foreach ($group as $preset): ?>
+                                    <option value="<?= h($preset['code']) ?>"<?= $selectedPreset === $preset['id'] ? ' selected' : '' ?>
                                             data-layout="<?= h($preset['layout']) ?>" data-palette="<?= h($preset['palette']) ?>">
                                         <?= h(t('settings.preset_named', [
-                                            'n' => $id,
+                                            'n' => $preset['id'],
                                             'layout' => t('settings.layout.' . $preset['layout']),
                                             'palette' => t('settings.palette.' . $preset['palette']),
                                         ])) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </optgroup>
-                        <?php
-                            $layoutIndex++;
-                        endforeach;
-                        ?>
+                            <?php $layoutIndex++; ?>
+                        <?php endforeach; ?>
                     </select>
                     <p class="muted"><?= h(t('settings.preset_count', ['n' => (string) count(theme_presets())])) ?></p>
                 </div>
@@ -300,9 +303,10 @@ admin_layout_start(t('settings.title'), 'settings');
                         <option value="light" <?= setting('public_theme') === 'light' ? 'selected' : '' ?>><?= h(t('ui.theme.light')) ?></option>
                         <option value="dark" <?= setting('public_theme') === 'dark' ? 'selected' : '' ?>><?= h(t('ui.theme.dark')) ?></option>
                     </select></div>
-                <p class="appearance-save">
-                    <button type="submit" name="save_appearance" value="1" class="btn save-appearance px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg"><?= h(t('settings.save_changes')) ?></button>
-                </p>
+                <div class="appearance-save">
+                    <span class="muted"><?= h(t('settings.appearance_hint')) ?></span>
+                    <button type="submit" name="save_appearance" value="1" class="btn save-appearance"><?= h(t('settings.save_changes')) ?></button>
+                </div>
             </section>
             <section class="card">
                 <h2><?= h(t('settings.card.identity')) ?></h2>

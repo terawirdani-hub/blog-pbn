@@ -44,23 +44,56 @@ function theme_palettes(): array
     ];
 }
 
+/**
+ * Full catalog of the 30 public presets (5 layouts x 6 palettes).
+ * Keys are the stored ids; `code` is the form value (t01 .. t30).
+ */
 function theme_presets(): array
 {
-    $out = [];
-    $n = 1;
-    foreach (array_keys(theme_layouts()) as $layout) {
-        foreach (array_keys(theme_palettes()) as $palette) {
-            $id = sprintf('%02d', $n);
-            $out[$id] = [
-                'id' => $id,
-                'n' => $n,
-                'layout' => $layout,
-                'palette' => $palette,
-            ];
-            $n++;
-        }
+    return [
+        '01' => ['id' => '01', 'code' => 't01', 'layout' => 'magazine', 'palette' => 'slate'],
+        '02' => ['id' => '02', 'code' => 't02', 'layout' => 'magazine', 'palette' => 'crimson'],
+        '03' => ['id' => '03', 'code' => 't03', 'layout' => 'magazine', 'palette' => 'emerald'],
+        '04' => ['id' => '04', 'code' => 't04', 'layout' => 'magazine', 'palette' => 'violet'],
+        '05' => ['id' => '05', 'code' => 't05', 'layout' => 'magazine', 'palette' => 'amber'],
+        '06' => ['id' => '06', 'code' => 't06', 'layout' => 'magazine', 'palette' => 'mono'],
+        '07' => ['id' => '07', 'code' => 't07', 'layout' => 'tech', 'palette' => 'slate'],
+        '08' => ['id' => '08', 'code' => 't08', 'layout' => 'tech', 'palette' => 'crimson'],
+        '09' => ['id' => '09', 'code' => 't09', 'layout' => 'tech', 'palette' => 'emerald'],
+        '10' => ['id' => '10', 'code' => 't10', 'layout' => 'tech', 'palette' => 'violet'],
+        '11' => ['id' => '11', 'code' => 't11', 'layout' => 'tech', 'palette' => 'amber'],
+        '12' => ['id' => '12', 'code' => 't12', 'layout' => 'tech', 'palette' => 'mono'],
+        '13' => ['id' => '13', 'code' => 't13', 'layout' => 'bento', 'palette' => 'slate'],
+        '14' => ['id' => '14', 'code' => 't14', 'layout' => 'bento', 'palette' => 'crimson'],
+        '15' => ['id' => '15', 'code' => 't15', 'layout' => 'bento', 'palette' => 'emerald'],
+        '16' => ['id' => '16', 'code' => 't16', 'layout' => 'bento', 'palette' => 'violet'],
+        '17' => ['id' => '17', 'code' => 't17', 'layout' => 'bento', 'palette' => 'amber'],
+        '18' => ['id' => '18', 'code' => 't18', 'layout' => 'bento', 'palette' => 'mono'],
+        '19' => ['id' => '19', 'code' => 't19', 'layout' => 'newspaper', 'palette' => 'slate'],
+        '20' => ['id' => '20', 'code' => 't20', 'layout' => 'newspaper', 'palette' => 'crimson'],
+        '21' => ['id' => '21', 'code' => 't21', 'layout' => 'newspaper', 'palette' => 'emerald'],
+        '22' => ['id' => '22', 'code' => 't22', 'layout' => 'newspaper', 'palette' => 'violet'],
+        '23' => ['id' => '23', 'code' => 't23', 'layout' => 'newspaper', 'palette' => 'amber'],
+        '24' => ['id' => '24', 'code' => 't24', 'layout' => 'newspaper', 'palette' => 'mono'],
+        '25' => ['id' => '25', 'code' => 't25', 'layout' => 'masonry', 'palette' => 'slate'],
+        '26' => ['id' => '26', 'code' => 't26', 'layout' => 'masonry', 'palette' => 'crimson'],
+        '27' => ['id' => '27', 'code' => 't27', 'layout' => 'masonry', 'palette' => 'emerald'],
+        '28' => ['id' => '28', 'code' => 't28', 'layout' => 'masonry', 'palette' => 'violet'],
+        '29' => ['id' => '29', 'code' => 't29', 'layout' => 'masonry', 'palette' => 'amber'],
+        '30' => ['id' => '30', 'code' => 't30', 'layout' => 'masonry', 'palette' => 'mono'],
+    ];
+}
+
+/**
+ * Presets grouped per layout, in catalog order, for the admin picker.
+ */
+function theme_presets_by_layout(): array
+{
+    $groups = [];
+    foreach (theme_presets() as $preset) {
+        $groups[$preset['layout']][] = $preset;
     }
-    return $out;
+    return $groups;
 }
 
 function normalize_template_id(string $value): string
@@ -80,9 +113,9 @@ function active_template_id(): string
     }
     $layout = setting('homepage_layout');
     $palette = setting('color_palette');
-    foreach (theme_presets() as $presetId => $preset) {
+    foreach (theme_presets() as $preset) {
         if ($preset['layout'] === $layout && $preset['palette'] === $palette) {
-            return $presetId;
+            return $preset['id'];
         }
     }
     return '01';
@@ -166,9 +199,9 @@ function apply_template_choice(string $layout, string $palette): array
     $layout = normalize_homepage_layout($layout);
     $palette = normalize_color_palette($palette);
     $id = '01';
-    foreach (theme_presets() as $presetId => $preset) {
+    foreach (theme_presets() as $preset) {
         if ($preset['layout'] === $layout && $preset['palette'] === $palette) {
-            $id = $presetId;
+            $id = $preset['id'];
             break;
         }
     }

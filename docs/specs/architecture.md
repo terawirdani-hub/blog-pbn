@@ -19,7 +19,7 @@ Key/value table `settings`. Never add a new operational constant in PHP. Default
 
 ## Templates
 
-`templates/*.php` plus `templates/layouts/` and `templates/partials/`. The public homepage reads `active_template` (`01`–`30`) from settings, which maps to `homepage_layout` + `color_palette` (5×6 presets). Legacy `template_style` still maps if those keys are empty.
+`templates/*.php` plus `templates/layouts/` and `templates/partials/`. The public homepage reads `active_template` (`01`–`30`) from settings, which maps to `homepage_layout` + `color_palette` (5×6 presets). The catalog lives in `theme_presets()` (`includes/theme.php`) as an explicit list; the admin picker posts the `t01`–`t30` form codes, which `normalize_template_id()` reduces to the stored id. Legacy `template_style` still maps if those keys are empty. Settings tabs accept Indonesian aliases (`tampilan`, `umum`, `penulis`, `iklan`) and redirect back with `?status=success` after a save.
 
 ## Logging
 
