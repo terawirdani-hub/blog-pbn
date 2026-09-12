@@ -69,12 +69,18 @@ if (is_post() && ($_POST['action'] ?? '') === 'import') {
                 }
                 $pdo->commit();
             } catch (Throwable $e) {
-                $pdo->rollBack();
-                throw $e;
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                settings_clear_cache();
+                error_log($e->getMessage());
+                $error = t('error.generic');
             }
-            audit_write('backup.import_json', 'settings', 'config', ['keys' => $applied]);
-            flash_set('success', t('flash.imported'));
-            redirect(admin_url('backup.php'));
+            if ($error === '') {
+                audit_write('backup.import_json', 'settings', 'config', ['keys' => $applied]);
+                flash_set('success', t('flash.imported'));
+                redirect(admin_url('backup.php'));
+            }
         }
     }
 }

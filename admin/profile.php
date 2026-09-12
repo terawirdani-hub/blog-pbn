@@ -37,6 +37,12 @@ if (is_post()) {
             db()->rollBack();
         }
         $error = $e->getMessage();
+    } catch (Throwable $e) {
+        if (db()->inTransaction()) {
+            db()->rollBack();
+        }
+        error_log($e->getMessage());
+        $error = t('error.generic');
     }
 }
 

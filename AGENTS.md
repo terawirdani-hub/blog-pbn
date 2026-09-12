@@ -29,7 +29,7 @@ Public front controller: `index.php`. Shared PHP: `includes/`. Admin pages: `adm
 php -S localhost:8080 router.php
 ```
 
-Open `/admin` (login is `/admin` or `/admin/index.php`, not `/admin/login.php`). Default user `admin` / `password123` is seeded if missing. Do not commit `database/data.sqlite`, `uploads/*` (except placeholders), or extra secrets.
+Open `/admin` (login is `/admin` or `/admin/index.php`, not `/admin/login.php`). Default user `admin` / `password123` is seeded only when the `users` table is empty, so a deleted or renamed admin stays gone. Run `php scripts/seed-admin.php` to recreate it (add `--reset` to reset its password). Do not commit `database/data.sqlite`, `uploads/*` (except placeholders), or extra secrets.
 
 ## Deploy
 

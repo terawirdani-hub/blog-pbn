@@ -15,8 +15,8 @@ function settings_tab(string $requested): string
     return in_array($requested, $allowedTabs, true) ? $requested : 'general';
 }
 
-$tab = settings_tab((string) ($_GET['tab'] ?? 'general'));
-$saved = ($_GET['status'] ?? '') === 'success';
+$tab = settings_tab(request_str($_GET['tab'] ?? '', 'general'));
+$saved = request_str($_GET['status'] ?? '') === 'success';
 
 function apply_branding_from_post(int $uid, array &$changed): void
 {
@@ -59,7 +59,7 @@ function apply_branding_from_post(int $uid, array &$changed): void
 $error = '';
 if (is_post()) {
     csrf_verify();
-    $tab = settings_tab((string) ($_POST['tab'] ?? 'general'));
+    $tab = settings_tab(request_str($_POST['tab'] ?? '', 'general'));
     if (isset($_POST['save_appearance'])) {
         $tab = 'appearance';
     }
@@ -70,12 +70,17 @@ if (is_post()) {
             $map = [
                 'site_name' => trim((string) ($_POST['site_name'] ?? '')),
                 'site_tagline' => trim((string) ($_POST['site_tagline'] ?? '')),
+                'site_url' => normalize_site_url((string) ($_POST['site_url'] ?? '')),
                 'site_locale' => ($_POST['site_locale'] ?? 'id') === 'en' ? 'en' : 'id',
                 'homepage_intro' => (string) ($_POST['homepage_intro'] ?? ''),
                 'footer_text' => trim((string) ($_POST['footer_text'] ?? '')),
                 'posts_per_page' => (string) max(5, min(50, (int) ($_POST['posts_per_page'] ?? 10))),
-                'comments_enabled' => isset($_POST['comments_enabled']) ? '1' : '0',
             ];
+            // The comments checkbox is disabled in the UI, so a browser never
+            // posts it. Only write the key when the form really carries it.
+            if (isset($_POST['comments_form'])) {
+                $map['comments_enabled'] = isset($_POST['comments_enabled']) ? '1' : '0';
+            }
             foreach ($map as $k => $v) {
                 if (setting($k) !== $v) {
                     $changed[] = $k;
@@ -139,9 +144,6 @@ if (is_post()) {
         } elseif ($tab === 'tracking') {
             foreach (['tracking_head_html', 'tracking_body_html'] as $k) {
                 $posted = (string) ($_POST[$k] ?? '');
-                if (trim($posted) === '') {
-                    continue;
-                }
                 if (setting($k) !== $posted) {
                     $changed[] = $k;
                 }
@@ -177,12 +179,6 @@ if (is_post()) {
                 }
                 setting_set($k, $v, $uid);
             }
-        } else {
-            $robots = (string) ($_POST['robots_txt'] ?? '');
-            if (setting('robots_txt') !== $robots) {
-                $changed[] = 'robots_txt';
-            }
-            setting_set('robots_txt', $robots, $uid);
         }
         if ($changed) {
             audit_write('settings.update', 'settings', $tab, ['keys' => $changed]);
@@ -227,6 +223,9 @@ admin_layout_start(t('settings.title'), 'settings');
                     <input type="text" name="site_name" required value="<?= h(setting('site_name')) ?>"></div>
                 <div class="field"><label><?= field_label('settings.site_tagline', 'site_tagline') ?></label>
                     <input type="text" name="site_tagline" value="<?= h(setting('site_tagline')) ?>"></div>
+                <div class="field"><label><?= field_label('settings.site_url', 'site_url') ?></label>
+                    <input type="text" name="site_url" value="<?= h(setting('site_url')) ?>" placeholder="https://domain.com">
+                    <p class="muted"><?= h(t('settings.site_url_hint')) ?></p></div>
                 <div class="field"><label><?= field_label('settings.site_locale', 'site_locale') ?></label>
                     <select name="site_locale">
                         <option value="id" <?= setting('site_locale') === 'id' ? 'selected' : '' ?>>Indonesia</option>
@@ -278,11 +277,11 @@ admin_layout_start(t('settings.title'), 'settings');
                     </select>
                     <p class="muted"><?= h(t('settings.preset_count', ['n' => (string) count(theme_presets())])) ?></p>
                 </div>
-                <p class="muted"><?= h(t('settings.layout_help')) ?></p>
+                <p class="muted"><?= h(t('settings.picker_help')) ?></p>
                 <div class="tpl-grid" data-layout-grid>
                     <?php foreach (theme_layouts() as $key => $meta): ?>
                         <label class="tpl-opt <?= public_layout() === $key ? 'is-on' : '' ?>">
-                            <input type="radio" name="homepage_layout" value="<?= h($key) ?>" <?= public_layout() === $key ? 'checked' : '' ?>>
+                            <input type="radio" name="layout_pick" value="<?= h($key) ?>" <?= public_layout() === $key ? 'checked' : '' ?>>
                             <strong><?= h(t($meta['label'])) ?></strong>
                             <span><?= h(t($meta['hint'])) ?></span>
                         </label>
@@ -292,7 +291,7 @@ admin_layout_start(t('settings.title'), 'settings');
                 <div class="palette-grid" data-palette-grid>
                     <?php foreach (theme_palettes() as $key => $swatch): ?>
                         <label class="palette-opt <?= public_palette() === $key ? 'is-on' : '' ?>">
-                            <input type="radio" name="color_palette" value="<?= h($key) ?>" <?= public_palette() === $key ? 'checked' : '' ?>>
+                            <input type="radio" name="palette_pick" value="<?= h($key) ?>" <?= public_palette() === $key ? 'checked' : '' ?>>
                             <span class="palette-bar" style="background: linear-gradient(90deg, <?= h($swatch['accent']) ?>, <?= h($swatch['primary']) ?>, <?= h($swatch['soft']) ?>);"></span>
                             <?= h(t('settings.palette.' . $key)) ?>
                         </label>
@@ -345,11 +344,11 @@ admin_layout_start(t('settings.title'), 'settings');
         </section>
     <?php elseif ($tab === 'tracking'): ?>
         <section class="card">
-            <p class="muted"><?= h(t('settings.masked_secret')) ?></p>
+            <p class="muted"><?= h(t('settings.tracking_note')) ?></p>
             <div class="field"><label><?= field_label('settings.tracking_head', 'tracking_head') ?></label>
-                <textarea name="tracking_head_html" placeholder="••••••••"></textarea></div>
+                <textarea name="tracking_head_html"><?= h(setting('tracking_head_html')) ?></textarea></div>
             <div class="field"><label><?= field_label('settings.tracking_body', 'tracking_body') ?></label>
-                <textarea name="tracking_body_html" placeholder="••••••••"></textarea></div>
+                <textarea name="tracking_body_html"><?= h(setting('tracking_body_html')) ?></textarea></div>
         </section>
     <?php else: ?>
         <div class="settings-grid">

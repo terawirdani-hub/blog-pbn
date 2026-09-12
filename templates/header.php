@@ -14,7 +14,7 @@ $navCategories = categories_with_counts();
 $isDark = $theme === 'dark';
 $layout = public_layout();
 $palette = public_palette();
-$searchQ = trim((string) ($_GET['q'] ?? ''));
+$searchQ = trim(request_str($_GET['q'] ?? ''));
 if (!isset($seo) || !is_array($seo)) {
     $seo = [
         'title' => $title ?? seo_home_document_title(),

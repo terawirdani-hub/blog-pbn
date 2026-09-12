@@ -10,6 +10,16 @@ function seo_absolute_url(string $pathOrUrl): string
     if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
         return $pathOrUrl;
     }
+    if (str_starts_with($pathOrUrl, '//')) {
+        return (str_starts_with(base_url(), 'https://') ? 'https:' : 'http:') . $pathOrUrl;
+    }
+    // A hand-typed canonical like "example.com/post" or "www.example.com" is an
+    // external URL, not a local path. A bare "photo.jpg" stays local.
+    $looksExternal = str_starts_with(strtolower($pathOrUrl), 'www.')
+        || preg_match('#^[a-z0-9-]+(\.[a-z0-9-]+)+/#i', $pathOrUrl) === 1;
+    if (!str_starts_with($pathOrUrl, '/') && $looksExternal) {
+        return 'https://' . $pathOrUrl;
+    }
     return url_path(ltrim($pathOrUrl, '/'));
 }
 
@@ -421,7 +431,8 @@ function seo_output_rss(): void
     foreach ($rows as $row) {
         $link = url_path($row['slug']);
         $desc = $row['seo_description'] !== '' ? $row['seo_description'] : $row['excerpt'];
-        $pub = $row['published_at'] ? gmdate(DATE_RSS, strtotime($row['published_at'] . ' UTC') ?: time()) : gmdate(DATE_RSS);
+        $pubTs = $row['published_at'] ? strtotime($row['published_at'] . ' UTC') : false;
+        $pub = gmdate(DATE_RSS, $pubTs !== false ? $pubTs : time());
         $author = author_display_name($row['author_username'] ?? null);
         echo "<item>\n";
         echo '<title>' . seo_xml_escape((string) $row['title']) . "</title>\n";

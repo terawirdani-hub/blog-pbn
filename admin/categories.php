@@ -8,36 +8,41 @@ $error = '';
 if (is_post()) {
     csrf_verify();
     $action = (string) ($_POST['action'] ?? 'save');
-    if ($action === 'delete') {
-        $id = (int) ($_POST['id'] ?? 0);
-        db()->prepare('DELETE FROM categories WHERE id = ?')->execute([$id]);
-        audit_write('category.delete', 'category', (string) $id);
-        flash_set('success', t('flash.deleted'));
-        redirect(admin_url('categories.php'));
-    }
-    $id = (int) ($_POST['id'] ?? 0);
-    $name = trim((string) ($_POST['name'] ?? ''));
-    $slugIn = trim((string) ($_POST['slug'] ?? ''));
-    $color = (string) ($_POST['color'] ?? '#2563eb');
-    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-        $color = '#2563eb';
-    }
-    if ($name === '') {
-        $error = t('ui.required');
-    } else {
-        $now = now_utc();
-        $slug = unique_category_slug(db(), $slugIn !== '' ? $slugIn : $name, $id > 0 ? $id : null);
-        if ($id > 0) {
-            db()->prepare('UPDATE categories SET name=?, slug=?, color=?, updated_at=? WHERE id=?')
-                ->execute([$name, $slug, $color, $now, $id]);
-            audit_write('category.update', 'category', (string) $id, ['name' => $name]);
-        } else {
-            db()->prepare('INSERT INTO categories (name, slug, color, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
-                ->execute([$name, $slug, $color, $now, $now]);
-            audit_write('category.create', 'category', (string) db()->lastInsertId(), ['name' => $name]);
+    try {
+        if ($action === 'delete') {
+            $id = (int) ($_POST['id'] ?? 0);
+            db()->prepare('DELETE FROM categories WHERE id = ?')->execute([$id]);
+            audit_write('category.delete', 'category', (string) $id);
+            flash_set('success', t('flash.deleted'));
+            redirect(admin_url('categories.php'));
         }
-        flash_set('success', t('flash.saved'));
-        redirect(admin_url('categories.php'));
+        $id = (int) ($_POST['id'] ?? 0);
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $slugIn = trim((string) ($_POST['slug'] ?? ''));
+        $color = (string) ($_POST['color'] ?? '#2563eb');
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
+            $color = '#2563eb';
+        }
+        if ($name === '') {
+            $error = t('ui.required');
+        } else {
+            $now = now_utc();
+            $slug = unique_category_slug(db(), $slugIn !== '' ? $slugIn : $name, $id > 0 ? $id : null);
+            if ($id > 0) {
+                db()->prepare('UPDATE categories SET name=?, slug=?, color=?, updated_at=? WHERE id=?')
+                    ->execute([$name, $slug, $color, $now, $id]);
+                audit_write('category.update', 'category', (string) $id, ['name' => $name]);
+            } else {
+                db()->prepare('INSERT INTO categories (name, slug, color, created_at, updated_at) VALUES (?, ?, ?, ?, ?)')
+                    ->execute([$name, $slug, $color, $now, $now]);
+                audit_write('category.create', 'category', (string) db()->lastInsertId(), ['name' => $name]);
+            }
+            flash_set('success', t('flash.saved'));
+            redirect(admin_url('categories.php'));
+        }
+    } catch (Throwable $e) {
+        error_log($e->getMessage());
+        $error = t('error.generic');
     }
 }
 

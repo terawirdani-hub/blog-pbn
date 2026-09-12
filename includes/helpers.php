@@ -11,6 +11,21 @@ function now_utc(): string
     return gmdate('Y-m-d H:i:s');
 }
 
+/**
+ * Reads a request value as a string. Arrays (`?tab[]=x`) fall back to the
+ * default instead of raising an "Array to string conversion" warning.
+ */
+function request_str(mixed $value, string $default = ''): string
+{
+    if (is_string($value)) {
+        return $value;
+    }
+    if (is_int($value) || is_float($value) || is_bool($value)) {
+        return (string) $value;
+    }
+    return $default;
+}
+
 function app_config(?string $key = null)
 {
     $config = $GLOBALS['app_config'] ?? [];
@@ -75,12 +90,57 @@ function slugify(string $text): string
     return substr($text, 0, 80);
 }
 
+/** Normalizes an operator-entered site URL, or returns '' when unusable. */
+function normalize_site_url(string $value): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '';
+    }
+    if (preg_match('#^https?://#i', $value) !== 1) {
+        $value = 'https://' . $value;
+    }
+    $value = rtrim($value, '/');
+    return filter_var($value, FILTER_VALIDATE_URL) ? $value : '';
+}
+
+/** First value of a possibly comma-separated proxy header. */
+function forwarded_header(string $name): string
+{
+    $raw = $_SERVER[$name] ?? '';
+    if (!is_string($raw) || $raw === '') {
+        return '';
+    }
+    return trim(explode(',', $raw)[0]);
+}
+
 function base_url(): string
 {
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || ((string) ($_SERVER['SERVER_PORT'] ?? '') === '443');
-    $scheme = $https ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    if (function_exists('setting')) {
+        try {
+            $configured = normalize_site_url(setting('site_url'));
+        } catch (Throwable $e) {
+            $configured = '';
+        }
+        if ($configured !== '') {
+            return $configured;
+        }
+    }
+    $forwardedProto = strtolower(forwarded_header('HTTP_X_FORWARDED_PROTO'));
+    if ($forwardedProto === 'https' || $forwardedProto === 'http') {
+        $scheme = $forwardedProto;
+    } else {
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || ((string) ($_SERVER['SERVER_PORT'] ?? '') === '443');
+        $scheme = $https ? 'https' : 'http';
+    }
+    $host = forwarded_header('HTTP_X_FORWARDED_HOST');
+    if ($host === '') {
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    }
+    if (!is_string($host) || preg_match('/^[A-Za-z0-9.\-]+(:\d{1,5})?$/', $host) !== 1) {
+        $host = 'localhost';
+    }
     $script = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
     $dir = str_replace('\\', '/', dirname($script));
     if (str_contains($dir, '/admin')) {

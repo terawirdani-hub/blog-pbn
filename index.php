@@ -35,15 +35,15 @@ if (preg_match('#^/category/([a-z0-9\-]+)(?:/page/(\d+))?$#', $path, $m)) {
 if (preg_match('#^/page/(\d+)$#', $path, $m)) {
     $page = (int) $m[1];
     if ($page <= 1) {
-        $q = trim((string) ($_GET['q'] ?? ''));
+        $q = trim(request_str($_GET['q'] ?? ''));
         redirect($q !== '' ? url_path() . '?q=' . rawurlencode($q) : url_path());
     }
-    render_home($page, null, trim((string) ($_GET['q'] ?? '')));
+    render_home($page, null, trim(request_str($_GET['q'] ?? '')));
     exit;
 }
 
 if ($path === '/' || $path === '/index.php') {
-    render_home(1, null, trim((string) ($_GET['q'] ?? '')));
+    render_home(1, null, trim(request_str($_GET['q'] ?? '')));
     exit;
 }
 
@@ -82,8 +82,13 @@ function render_home(int $page, ?string $categorySlug, string $query = ''): void
         $query = '';
     }
     $query = trim($query);
+    $needle = str_replace(['%', '_'], '', $query);
+    if ($needle === '') {
+        // A query made only of LIKE wildcards would otherwise match everything.
+        $query = '';
+    }
     if ($query !== '') {
-        $like = '%' . str_replace(['%', '_'], '', $query) . '%';
+        $like = '%' . $needle . '%';
         $where .= ' AND (p.title LIKE ? OR p.excerpt LIKE ? OR p.seo_title LIKE ? OR p.focus_keyword LIKE ?)';
         array_push($args, $like, $like, $like, $like);
     }

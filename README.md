@@ -43,7 +43,7 @@ Language (Indonesian / English) and Dark / Light are in **Profile** for the admi
 
 ## Security notes
 
-- Default login is `admin` / `password123` (seeded if that user is missing). Change it immediately on a public host.
+- Default login is `admin` / `password123`, seeded only on a fresh install (empty `users` table). Change it immediately on a public host. If every account is lost, run `php scripts/seed-admin.php` on the server to recreate the default admin.
 - `database/` is blocked from HTTP. PHP cannot run from `uploads/`.
 - Keep PHP `debug` in `config.php` set to `false` on public hosts.
 

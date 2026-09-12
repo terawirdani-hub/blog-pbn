@@ -8,38 +8,43 @@ $error = '';
 if (is_post()) {
     csrf_verify();
     $action = (string) ($_POST['action'] ?? 'save');
-    if ($action === 'delete') {
-        $id = (int) ($_POST['id'] ?? 0);
-        db()->prepare('DELETE FROM blogroll WHERE id = ?')->execute([$id]);
-        audit_write('blogroll.delete', 'blogroll', (string) $id);
-        flash_set('success', t('flash.deleted'));
-        redirect(admin_url('blogroll.php'));
-    }
-    $id = (int) ($_POST['id'] ?? 0);
-    $title = trim((string) ($_POST['title'] ?? ''));
-    $url = trim((string) ($_POST['url'] ?? ''));
-    $rel = trim((string) ($_POST['rel'] ?? 'noopener noreferrer'));
-    $target = ($_POST['target'] ?? '_blank') === '_self' ? '_self' : '_blank';
-    $sort = (int) ($_POST['sort_order'] ?? 0);
-    $active = isset($_POST['is_active']) ? 1 : 0;
-    if ($title === '' || $url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
-        $error = t('ui.required');
-    } else {
-        $now = now_utc();
-        if ($id > 0) {
-            db()->prepare(
-                'UPDATE blogroll SET title=?, url=?, rel=?, target=?, sort_order=?, is_active=?, updated_at=? WHERE id=?'
-            )->execute([$title, $url, $rel, $target, $sort, $active, $now, $id]);
-            audit_write('blogroll.update', 'blogroll', (string) $id, ['url' => $url]);
-        } else {
-            db()->prepare(
-                'INSERT INTO blogroll (title, url, rel, target, sort_order, is_active, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-            )->execute([$title, $url, $rel, $target, $sort, $active, $now, $now]);
-            audit_write('blogroll.create', 'blogroll', (string) db()->lastInsertId(), ['url' => $url]);
+    try {
+        if ($action === 'delete') {
+            $id = (int) ($_POST['id'] ?? 0);
+            db()->prepare('DELETE FROM blogroll WHERE id = ?')->execute([$id]);
+            audit_write('blogroll.delete', 'blogroll', (string) $id);
+            flash_set('success', t('flash.deleted'));
+            redirect(admin_url('blogroll.php'));
         }
-        flash_set('success', t('flash.saved'));
-        redirect(admin_url('blogroll.php'));
+        $id = (int) ($_POST['id'] ?? 0);
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $url = trim((string) ($_POST['url'] ?? ''));
+        $rel = trim((string) ($_POST['rel'] ?? 'noopener noreferrer'));
+        $target = ($_POST['target'] ?? '_blank') === '_self' ? '_self' : '_blank';
+        $sort = (int) ($_POST['sort_order'] ?? 0);
+        $active = isset($_POST['is_active']) ? 1 : 0;
+        if ($title === '' || $url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
+            $error = t('ui.required');
+        } else {
+            $now = now_utc();
+            if ($id > 0) {
+                db()->prepare(
+                    'UPDATE blogroll SET title=?, url=?, rel=?, target=?, sort_order=?, is_active=?, updated_at=? WHERE id=?'
+                )->execute([$title, $url, $rel, $target, $sort, $active, $now, $id]);
+                audit_write('blogroll.update', 'blogroll', (string) $id, ['url' => $url]);
+            } else {
+                db()->prepare(
+                    'INSERT INTO blogroll (title, url, rel, target, sort_order, is_active, created_at, updated_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                )->execute([$title, $url, $rel, $target, $sort, $active, $now, $now]);
+                audit_write('blogroll.create', 'blogroll', (string) db()->lastInsertId(), ['url' => $url]);
+            }
+            flash_set('success', t('flash.saved'));
+            redirect(admin_url('blogroll.php'));
+        }
+    } catch (Throwable $e) {
+        error_log($e->getMessage());
+        $error = t('error.generic');
     }
 }
 

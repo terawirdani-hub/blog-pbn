@@ -181,6 +181,60 @@ if (seo_home_document_title() !== 'Home Title Smoke') {
     fail('home meta title');
 }
 
+if (seo_absolute_url('example.com/post') !== 'https://example.com/post') {
+    fail('scheme-less canonical should stay external');
+}
+if (normalize_site_url('domain.com/') !== 'https://domain.com') {
+    fail('site url should gain a scheme and lose the trailing slash');
+}
+if (normalize_site_url('not a url') !== '') {
+    fail('invalid site url should be dropped');
+}
+setting_set('site_url', 'https://pbn.example', $id1);
+if (base_url() !== 'https://pbn.example' || url_path('rss.xml') !== 'https://pbn.example/rss.xml') {
+    fail('configured site_url should drive absolute URLs');
+}
+setting_set('site_url', '', $id1);
+if (seo_absolute_url('uploads/logo.png') === 'https://uploads/logo.png') {
+    fail('upload path should stay local');
+}
+
+// The last-admin guard lives in SQL so concurrent deletes cannot both pass.
+// Exercised on a scratch database to keep the real one untouched.
+$mem = new PDO('sqlite::memory:', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$mem->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, role TEXT NOT NULL)');
+$mem->exec("INSERT INTO users (id, role) VALUES (1, 'admin'), (2, 'admin'), (3, 'editor')");
+$guard = "DELETE FROM users WHERE id = ?
+          AND (role <> 'admin' OR (SELECT COUNT(*) FROM users WHERE role = 'admin') > 1)";
+$del = $mem->prepare($guard);
+$del->execute([1]);
+if ($del->rowCount() !== 1) {
+    fail('deleting one of two admins should succeed');
+}
+$del->execute([2]);
+if ($del->rowCount() !== 0) {
+    fail('deleting the last admin must be refused');
+}
+$del->execute([3]);
+if ($del->rowCount() !== 1) {
+    fail('deleting an editor should succeed');
+}
+if ((int) $mem->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn() !== 1) {
+    fail('exactly one admin should remain');
+}
+$demote = $mem->prepare(
+    "UPDATE users SET role = ? WHERE id = ?
+     AND (? = 'admin' OR role <> 'admin' OR (SELECT COUNT(*) FROM users WHERE role = 'admin') > 1)"
+);
+$demote->execute(['editor', 2, 'editor']);
+if ($demote->rowCount() !== 0) {
+    fail('demoting the last admin must be refused');
+}
+$demote->execute(['admin', 2, 'admin']);
+if ($demote->rowCount() !== 1) {
+    fail('re-promoting an admin should succeed');
+}
+
 if ($failures === 0) {
     echo "OK\n";
     exit(0);

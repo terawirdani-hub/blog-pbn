@@ -25,13 +25,21 @@ if (is_post()) {
             $st = db()->prepare('SELECT id, role FROM users WHERE id = ?');
             $st->execute([$id]);
             $target = $st->fetch();
-            if ($target && $target['role'] === 'admin' && admin_count() <= 1) {
+            if (!$target) {
+                throw new InvalidArgumentException(t('users.not_found'));
+            }
+            // The admin count is re-checked inside the statement so two
+            // concurrent deletes cannot both pass and leave zero admins.
+            $st = db()->prepare(
+                "DELETE FROM users
+                 WHERE id = ?
+                   AND (role <> 'admin' OR (SELECT COUNT(*) FROM users WHERE role = 'admin') > 1)"
+            );
+            $st->execute([$id]);
+            if ($st->rowCount() === 0) {
                 throw new InvalidArgumentException(t('users.delete_last_admin'));
             }
-            if ($target) {
-                db()->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
-                audit_write('user.delete', 'user', (string) $id);
-            }
+            audit_write('user.delete', 'user', (string) $id);
             flash_set('success', t('flash.deleted'));
             redirect(admin_url('users.php'));
         }
@@ -41,10 +49,18 @@ if (is_post()) {
             $st = db()->prepare('SELECT id, role FROM users WHERE id = ?');
             $st->execute([$id]);
             $target = $st->fetch();
-            if ($target && $target['role'] === 'admin' && $role !== 'admin' && admin_count() <= 1) {
+            if (!$target) {
+                throw new InvalidArgumentException(t('users.not_found'));
+            }
+            $st = db()->prepare(
+                "UPDATE users SET role = ?, updated_at = ?
+                 WHERE id = ?
+                   AND (? = 'admin' OR role <> 'admin' OR (SELECT COUNT(*) FROM users WHERE role = 'admin') > 1)"
+            );
+            $st->execute([$role, now_utc(), $id, $role]);
+            if ($st->rowCount() === 0) {
                 throw new InvalidArgumentException(t('users.delete_last_admin'));
             }
-            db()->prepare('UPDATE users SET role = ?, updated_at = ? WHERE id = ?')->execute([$role, now_utc(), $id]);
             audit_write('user.role', 'user', (string) $id, ['role' => $role]);
             flash_set('success', t('flash.saved'));
             redirect(admin_url('users.php'));

@@ -161,6 +161,19 @@ function admin_count(): int
     return (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 }
 
+/**
+ * Boot-time seed. Once an operator owns the site the account list is theirs, so
+ * a deleted or renamed `admin` is never silently recreated with a known password.
+ * Use `php scripts/seed-admin.php` to recover a locked-out install.
+ */
+function seed_admin_if_no_users(): void
+{
+    if (user_count() > 0) {
+        return;
+    }
+    ensure_default_admin();
+}
+
 function ensure_default_admin(bool $resetPassword = false): void
 {
     $username = 'admin';
@@ -168,19 +181,27 @@ function ensure_default_admin(bool $resetPassword = false): void
     $st = db()->prepare('SELECT id FROM users WHERE username = ?');
     $st->execute([$username]);
     $existing = $st->fetch();
+    if ($existing && !$resetPassword) {
+        return;
+    }
+    // Hashing is expensive, so only pay for it when a write actually follows.
     $now = now_utc();
     $hash = password_hash($password, PASSWORD_DEFAULT);
     if ($existing) {
-        if ($resetPassword) {
-            db()->prepare('UPDATE users SET password_hash = ?, role = ?, updated_at = ? WHERE id = ?')
-                ->execute([$hash, 'admin', $now, (int) $existing['id']]);
-            db()->prepare('DELETE FROM login_attempts WHERE username = ?')->execute([strtolower($username)]);
-        }
+        db()->prepare('UPDATE users SET password_hash = ?, role = ?, updated_at = ? WHERE id = ?')
+            ->execute([$hash, 'admin', $now, (int) $existing['id']]);
+        db()->prepare('DELETE FROM login_attempts WHERE username = ?')->execute([strtolower($username)]);
         return;
     }
-    db()->prepare(
-        'INSERT INTO users (username, password_hash, role, locale, theme, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)'
-    )->execute([$username, $hash, 'admin', 'id', 'dark', $now, $now]);
+    try {
+        db()->prepare(
+            'INSERT OR IGNORE INTO users (username, password_hash, role, locale, theme, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
+        )->execute([$username, $hash, 'admin', 'id', 'dark', $now, $now]);
+    } catch (PDOException $e) {
+        // A parallel first boot may have inserted the same user already.
+        error_log('Default admin seed skipped: ' . $e->getMessage());
+        return;
+    }
     db()->prepare('DELETE FROM login_attempts WHERE username = ?')->execute([strtolower($username)]);
 }

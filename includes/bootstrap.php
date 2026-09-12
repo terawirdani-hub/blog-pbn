@@ -40,5 +40,5 @@ start_secure_session();
 $pdo = db();
 migrate($pdo);
 ensure_setting_defaults($pdo);
-ensure_default_admin();
+seed_admin_if_no_users();
 i18n_boot();

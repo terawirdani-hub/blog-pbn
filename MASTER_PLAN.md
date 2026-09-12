@@ -223,6 +223,7 @@ See Section 6.3.
 | Setting | Description | Changed by | Notes |
 |---------|-------------|------------|-------|
 | Site name, tagline, footer | Branding | admin | |
+| Site URL | Absolute base for canonical/OG/sitemap/RSS | admin | Settings → General; empty = derive from the request (honours `X-Forwarded-Proto`/`Host`) |
 | Logo, favicon | Appearance | admin | Uploads |
 | Public locale | ID or EN for the blog | admin | |
 | Public theme default | Light or Dark | admin | Visitors may override |

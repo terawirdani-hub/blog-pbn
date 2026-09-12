@@ -6,6 +6,7 @@ function setting_defaults(): array
     return [
         'site_name' => ['value' => 'Turbo PBN', 'secret' => 0],
         'site_tagline' => ['value' => '', 'secret' => 0],
+        'site_url' => ['value' => '', 'secret' => 0],
         'site_locale' => ['value' => 'id', 'secret' => 0],
         'public_theme' => ['value' => 'light', 'secret' => 0],
         'template_style' => ['value' => 'magazine', 'secret' => 0],
@@ -46,13 +47,30 @@ function setting_defaults(): array
 
 function ensure_setting_defaults(PDO $pdo): void
 {
+    $defaults = setting_defaults();
+    // Every request boots this, so avoid the write locks when the rows already exist.
+    $stored = (int) $pdo->query('SELECT COUNT(*) FROM settings')->fetchColumn();
+    if ($stored >= count($defaults)) {
+        $known = settings_all();
+        $missing = false;
+        foreach (array_keys($defaults) as $key) {
+            if (!array_key_exists($key, $known)) {
+                $missing = true;
+                break;
+            }
+        }
+        if (!$missing) {
+            return;
+        }
+    }
     $st = $pdo->prepare(
         'INSERT OR IGNORE INTO settings (key, value, is_secret, updated_at) VALUES (?, ?, ?, ?)'
     );
     $now = now_utc();
-    foreach (setting_defaults() as $key => $meta) {
+    foreach ($defaults as $key => $meta) {
         $st->execute([$key, $meta['value'], $meta['secret'], $now]);
     }
+    settings_clear_cache();
 }
 
 function settings_all(): array
