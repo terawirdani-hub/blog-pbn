@@ -235,6 +235,9 @@ See Section 6.3.
 | Ad slots | Header / sidebar / in-article / footer HTML | admin | Raw HTML |
 | Tracking | Head / body snippet | admin | Raw HTML, admin-only |
 | Robots.txt body | Crawler rules | admin | Served at `/robots.txt` |
+| Homepage meta title/description/keywords | Site SEO tab | admin | Empty title falls back to name + tagline |
+| Default Open Graph image | Site SEO tab | admin | Used on homepage and posts without an image |
+| Google / Bing verification | Site SEO tab | admin | Meta tags in public `<head>` |
 | Feature: comments | Reserved flag (off in v1) | admin | |
 | Author name, bio, avatar | Sidebar author card | admin | |
 | Social profile URLs | Author card links | admin | |

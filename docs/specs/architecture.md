@@ -15,7 +15,7 @@
 
 ## Settings
 
-Key/value table `settings`. Never add a new operational constant in PHP. Defaults live in `includes/settings.php` (`setting_defaults()`).
+Key/value table `settings`. Never add a new operational constant in PHP. Defaults live in `includes/settings.php` (`setting_defaults()`). Homepage SEO fields (`home_meta_title`, `home_meta_description`, `home_meta_keywords`, `og_default_image_path`, webmaster verification) are edited on Settings → Site SEO.
 
 ## Templates
 

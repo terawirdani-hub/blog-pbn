@@ -159,11 +159,17 @@ function media_uploader(string $name, string $currentPath, string $labelKey, str
 {
     $id = 'upl-' . preg_replace('/[^a-z0-9]+/i', '-', $name);
     $has = $currentPath !== '';
+    $box = 'is-logo';
+    if ($compact) {
+        $box = 'is-fav';
+    } elseif ($name === 'og_default') {
+        $box = 'is-og';
+    }
     ?>
     <div class="media-field" data-uploader>
         <label><?= field_label($labelKey, $tipKey) ?></label>
         <div class="media-row">
-            <div class="media-preview <?= $compact ? 'is-fav' : 'is-logo' ?>" data-preview>
+            <div class="media-preview <?= $box ?>" data-preview>
                 <?php if ($has): ?>
                     <img src="<?= h(media_url($currentPath)) ?>" alt="">
                 <?php else: ?>
@@ -173,7 +179,7 @@ function media_uploader(string $name, string $currentPath, string $labelKey, str
             <div class="media-actions">
                 <input type="file" id="<?= h($id) ?>" name="<?= h($name) ?>" accept=".png,.jpg,.jpeg,.svg,.ico,.webp,image/png,image/jpeg,image/svg+xml,image/x-icon,image/webp" data-live-file>
                 <div class="media-btns">
-                    <label class="btn ghost" for="<?= h($id) ?>"><?= h($has ? t('ui.replace') : t('ui.change')) ?></label>
+                    <label class="btn ghost" for="<?= h($id) ?>"><?= h(t('ui.change')) ?></label>
                     <?php if ($has): ?>
                         <label class="btn danger ghost"><input type="checkbox" name="remove_<?= h($name) ?>" value="1"> <?= h(t('ui.remove')) ?></label>
                     <?php endif; ?>

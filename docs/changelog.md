@@ -9,3 +9,4 @@
 - SEO engine: robots Discover directives, canonical, Open Graph/Twitter, JSON-LD (WebSite/Organization/NewsArticle/BreadcrumbList), `/rss.xml`, richer `/sitemap.xml`.
 - Post SEO fields: focus keyword, title/description counters, schema type, index/noindex, custom canonical.
 - 30 homepage templates (5 layouts × 6 palettes) selectable in Settings → Appearance.
+- Site SEO tab: homepage meta title/description/keywords, default OG image, Google/Bing verification, live sitemap/RSS shortcuts.

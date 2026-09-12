@@ -133,6 +133,14 @@ if (setting('site_name') !== 'Smoke Site') {
 if (count(theme_presets()) !== 30) {
     fail('theme presets should be 30');
 }
+$tok = seo_verification_token('<meta name="google-site-verification" content="AbC_12-3">');
+if ($tok !== 'AbC_12-3') {
+    fail('seo verification parse');
+}
+setting_set('home_meta_title', 'Home Title Smoke', $id1);
+if (seo_home_document_title() !== 'Home Title Smoke') {
+    fail('home meta title');
+}
 
 if ($failures === 0) {
     echo "OK\n";

@@ -33,6 +33,10 @@ function seo_robots(bool $index): string
 
 function seo_default_image(): string
 {
+    $og = setting('og_default_image_path');
+    if ($og !== '') {
+        return seo_absolute_url($og);
+    }
     $logo = setting('logo_path');
     if ($logo !== '') {
         return seo_absolute_url($logo);
@@ -63,6 +67,40 @@ function seo_schema_type(array $post): string
 {
     $type = (string) ($post['schema_type'] ?? 'NewsArticle');
     return $type === 'BlogPosting' ? 'BlogPosting' : 'NewsArticle';
+}
+
+function seo_verification_token(string $raw): string
+{
+    $raw = trim($raw);
+    if ($raw === '') {
+        return '';
+    }
+    if (preg_match('/\bcontent\s*=\s*["\']([^"\']+)["\']/i', $raw, $m)) {
+        $raw = $m[1];
+    }
+    $clean = preg_replace('/[^a-zA-Z0-9_\-]/', '', $raw) ?? '';
+    return substr($clean, 0, 128);
+}
+
+function seo_home_document_title(int $page = 1): string
+{
+    $custom = trim(setting('home_meta_title'));
+    $site = setting('site_name');
+    $tagline = trim(setting('site_tagline'));
+    $base = $custom !== '' ? $custom : ($tagline !== '' ? $site . ' - ' . $tagline : $site);
+    if ($page > 1) {
+        return $base . ' — ' . t('ui.pagination') . ' ' . $page;
+    }
+    return $base;
+}
+
+function seo_home_description(): string
+{
+    $custom = trim(setting('home_meta_description'));
+    if ($custom !== '') {
+        return $custom;
+    }
+    return trim(setting('site_tagline'));
 }
 
 function seo_json(array $data): string
@@ -104,7 +142,7 @@ function seo_website_graph(): array
                 '@id' => url_path() . '#website',
                 'url' => url_path(),
                 'name' => $siteName,
-                'description' => setting('site_tagline'),
+                'description' => seo_home_description() !== '' ? seo_home_description() : setting('site_tagline'),
                 'inLanguage' => locale() === 'en' ? 'en' : 'id',
                 'publisher' => ['@id' => url_path() . '#organization'],
                 'potentialAction' => [
@@ -199,9 +237,9 @@ function seo_article_graph(array $post, string $canonical, string $headline, str
 function seo_context_home(?array $category, int $page, string $query = ''): array
 {
     $site = setting('site_name');
-    $tagline = setting('site_tagline');
-    $title = $site;
-    $description = $tagline;
+    $title = seo_home_document_title(1);
+    $description = seo_home_description();
+    $keywords = trim(setting('home_meta_keywords'));
     $canonical = url_path();
     if (is_array($category)) {
         $title = $category['name'] . ' — ' . $site;
@@ -218,15 +256,15 @@ function seo_context_home(?array $category, int $page, string $query = ''): arra
         }
     } elseif ($page > 1) {
         $canonical = url_path('page/' . $page);
-        $title = $site . ' — ' . t('ui.pagination') . ' ' . $page;
+        $title = seo_home_document_title($page);
     }
-    $ogType = is_array($category) ? 'website' : 'website';
     return [
         'title' => $title,
         'description' => $description,
+        'keywords' => $keywords,
         'canonical' => $canonical,
         'robots' => seo_robots(true),
-        'og_type' => $ogType,
+        'og_type' => 'website',
         'og_image' => seo_default_image(),
         'jsonld' => seo_json(seo_website_graph()),
     ];
@@ -252,6 +290,7 @@ function seo_context_post(array $post): array
         'robots' => seo_robots($index),
         'og_type' => 'article',
         'og_image' => $image,
+        'keywords' => trim((string) (($post['focus_keyword'] ?? '') !== '' ? $post['focus_keyword'] : ($post['seo_keywords'] ?? ''))),
         'jsonld' => seo_json(seo_article_graph($post, $canonical, $headline, $description, $image)),
     ];
 }
@@ -278,10 +317,22 @@ function seo_print_head(array $seo): void
     $robots = (string) ($seo['robots'] ?? seo_robots(true));
     $ogType = (string) ($seo['og_type'] ?? 'website');
     $image = (string) ($seo['og_image'] ?? '');
+    $keywords = trim((string) ($seo['keywords'] ?? setting('home_meta_keywords')));
     $locale = locale() === 'en' ? 'en_US' : 'id_ID';
     echo '<title>' . h($title) . "</title>\n";
     if ($desc !== '') {
         echo '<meta name="description" content="' . h($desc) . "\">\n";
+    }
+    if ($keywords !== '') {
+        echo '<meta name="keywords" content="' . h($keywords) . "\">\n";
+    }
+    $google = setting('google_site_verification');
+    if ($google !== '') {
+        echo '<meta name="google-site-verification" content="' . h($google) . "\">\n";
+    }
+    $bing = setting('bing_site_verification');
+    if ($bing !== '') {
+        echo '<meta name="msvalidate.01" content="' . h($bing) . "\">\n";
     }
     echo '<meta name="robots" content="' . h($robots) . "\">\n";
     echo '<link rel="canonical" href="' . h($canonical) . "\">\n";

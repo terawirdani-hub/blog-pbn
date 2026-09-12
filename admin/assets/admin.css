@@ -223,7 +223,13 @@ textarea { min-height: 120px; }
 }
 .tip-box strong { display: block; margin-bottom: 0.2rem; }
 .tip:hover .tip-box, .tip:focus .tip-box { display: block; }
-.media-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.media-field { margin-bottom: 1.1rem; }
+.media-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
 .media-preview {
   border: 1px dashed var(--border);
   border-radius: 1rem;
@@ -231,14 +237,58 @@ textarea { min-height: 120px; }
   display: grid;
   place-items: center;
   overflow: hidden;
+  flex: 0 0 auto;
 }
 .media-preview.is-logo { width: 180px; height: 72px; }
-.media-preview.is-fav { width: 64px; height: 64px; }
+.media-preview.is-fav { width: 72px; height: 72px; }
+.media-preview.is-og { width: 180px; height: 96px; }
 .media-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.media-actions { position: relative; }
-.media-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.4rem 0; }
+.media-empty { font-size: 0.75rem; color: var(--muted); }
+.media-actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 72px;
+  flex: 1;
+  min-width: 0;
+}
+.media-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; margin: 0; }
 .media-actions input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.media-btns .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.15rem;
+  margin: 0;
+  cursor: pointer;
+}
 .media-btns .btn input { margin-right: 0.3rem; }
+.feed-cards { display: grid; gap: 0.65rem; }
+.feed-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  text-decoration: none;
+  color: inherit;
+  background: var(--bg);
+}
+.feed-card:hover { border-color: var(--primary); }
+.feed-card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.feed-on {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.12);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+}
 .auth-screen {
   min-height: 100vh;
   display: grid;
@@ -286,4 +336,5 @@ textarea { min-height: 120px; }
   .shell { grid-template-columns: 1fr; }
   .side { border-right: 0; border-bottom: 1px solid var(--border); }
   .topbar { flex-wrap: wrap; }
+  .media-row { flex-wrap: wrap; }
 }

@@ -139,6 +139,36 @@ if (is_post()) {
                 }
                 setting_set($k, $posted, $uid);
             }
+        } elseif ($tab === 'seo') {
+            $og = setting('og_default_image_path');
+            if (!empty($_POST['remove_og_default'])) {
+                delete_local_upload($og);
+                $og = '';
+            }
+            if (!empty($_FILES['og_default']) && is_array($_FILES['og_default'])) {
+                $stored = store_uploaded_image($_FILES['og_default'], 'oghome');
+                if ($stored !== '') {
+                    if ($og !== '') {
+                        delete_local_upload($og);
+                    }
+                    $og = $stored;
+                }
+            }
+            $map = [
+                'home_meta_title' => trim((string) ($_POST['home_meta_title'] ?? '')),
+                'home_meta_description' => trim((string) ($_POST['home_meta_description'] ?? '')),
+                'home_meta_keywords' => trim((string) ($_POST['home_meta_keywords'] ?? '')),
+                'og_default_image_path' => $og,
+                'google_site_verification' => seo_verification_token((string) ($_POST['google_site_verification'] ?? '')),
+                'bing_site_verification' => seo_verification_token((string) ($_POST['bing_site_verification'] ?? '')),
+                'robots_txt' => (string) ($_POST['robots_txt'] ?? ''),
+            ];
+            foreach ($map as $k => $v) {
+                if (setting($k) !== $v) {
+                    $changed[] = $k;
+                }
+                setting_set($k, $v, $uid);
+            }
         } else {
             $robots = (string) ($_POST['robots_txt'] ?? '');
             if (setting('robots_txt') !== $robots) {
@@ -295,14 +325,61 @@ admin_layout_start(t('settings.title'), 'settings');
                 <textarea name="tracking_body_html" placeholder="••••••••"></textarea></div>
         </section>
     <?php else: ?>
-        <section class="card">
-            <h2><?= h(t('settings.card.seo')) ?></h2>
-            <p class="muted"><?= h(t('settings.seo_feeds')) ?></p>
-            <p><a href="<?= h(url_path('sitemap.xml')) ?>" target="_blank" rel="noopener">sitemap.xml</a>
-               · <a href="<?= h(url_path('rss.xml')) ?>" target="_blank" rel="noopener">rss.xml</a></p>
-            <div class="field"><label><?= field_label('settings.robots', 'robots_txt') ?></label>
-                <textarea name="robots_txt" style="min-height:200px"><?= h(setting('robots_txt')) ?></textarea></div>
-        </section>
+        <div class="settings-grid">
+            <section class="card">
+                <h2><?= h(t('settings.card.home_seo')) ?></h2>
+                <div class="field">
+                    <label><?= field_label('settings.home_meta_title', 'home_meta_title') ?></label>
+                    <input type="text" name="home_meta_title" data-count-target="60" value="<?= h(setting('home_meta_title')) ?>">
+                    <p class="char-meter muted" data-count-out>0 / 60</p>
+                </div>
+                <div class="field">
+                    <label><?= field_label('settings.home_meta_description', 'home_meta_description') ?></label>
+                    <textarea name="home_meta_description" data-count-target="160"><?= h(setting('home_meta_description')) ?></textarea>
+                    <p class="char-meter muted" data-count-out>0 / 160</p>
+                </div>
+                <div class="field">
+                    <label><?= field_label('settings.home_meta_keywords', 'home_meta_keywords') ?></label>
+                    <input type="text" name="home_meta_keywords" value="<?= h(setting('home_meta_keywords')) ?>">
+                </div>
+                <?php media_uploader('og_default', setting('og_default_image_path'), 'settings.og_default', 'og_default'); ?>
+                <div class="field">
+                    <label><?= field_label('settings.google_verify', 'google_verify') ?></label>
+                    <input type="text" name="google_site_verification" value="<?= h(setting('google_site_verification')) ?>" placeholder="google-site-verification">
+                </div>
+                <div class="field">
+                    <label><?= field_label('settings.bing_verify', 'bing_verify') ?></label>
+                    <input type="text" name="bing_site_verification" value="<?= h(setting('bing_site_verification')) ?>" placeholder="msvalidate.01">
+                </div>
+            </section>
+            <div>
+                <section class="card">
+                    <h2><?= h(t('settings.card.feeds')) ?></h2>
+                    <p class="muted"><?= h(t('settings.seo_feeds')) ?></p>
+                    <div class="feed-cards">
+                        <a class="feed-card" href="<?= h(url_path('sitemap.xml')) ?>" target="_blank" rel="noopener">
+                            <span class="feed-card-top">
+                                <strong>sitemap.xml</strong>
+                                <span class="feed-on"><?= h(t('settings.feed_active')) ?></span>
+                            </span>
+                            <span class="muted"><?= h(t('settings.feed_sitemap')) ?></span>
+                        </a>
+                        <a class="feed-card" href="<?= h(url_path('rss.xml')) ?>" target="_blank" rel="noopener">
+                            <span class="feed-card-top">
+                                <strong>rss.xml</strong>
+                                <span class="feed-on"><?= h(t('settings.feed_active')) ?></span>
+                            </span>
+                            <span class="muted"><?= h(t('settings.feed_rss')) ?></span>
+                        </a>
+                    </div>
+                </section>
+                <section class="card" style="margin-top:1rem">
+                    <h2><?= h(t('settings.card.seo')) ?></h2>
+                    <div class="field"><label><?= field_label('settings.robots', 'robots_txt') ?></label>
+                        <textarea name="robots_txt" style="min-height:160px"><?= h(setting('robots_txt')) ?></textarea></div>
+                </section>
+            </div>
+        </div>
     <?php endif; ?>
     <p><button class="btn" type="submit"><?= h(t('ui.save')) ?></button></p>
 </form>

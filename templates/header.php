@@ -17,8 +17,9 @@ $palette = public_palette();
 $searchQ = trim((string) ($_GET['q'] ?? ''));
 if (!isset($seo) || !is_array($seo)) {
     $seo = [
-        'title' => $title ?? $siteName,
-        'description' => $description ?? '',
+        'title' => $title ?? seo_home_document_title(),
+        'description' => $description ?? seo_home_description(),
+        'keywords' => setting('home_meta_keywords'),
         'canonical' => $canonical ?? url_path(),
         'robots' => $index ?? seo_robots(true),
         'og_type' => 'website',
