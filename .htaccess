@@ -1,0 +1,7 @@
+RewriteEngine On
+Options -Indexes
+
+# Front controller (SEO URLs). Existing files (admin, assets, uploads) are served as-is.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]

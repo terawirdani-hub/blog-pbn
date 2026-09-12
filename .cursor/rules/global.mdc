@@ -1,0 +1,12 @@
+---
+description: Turbo PBN context, languages, documentation sync, post-task actions
+alwaysApply: true
+---
+
+# Turbo PBN — global
+
+- Product: PHP 8 + SQLite PBN blog template. Chat in Bahasa Indonesia. Code/docs/commits in English.
+- Precedence: roadmap.md → MASTER_PLAN.md → AGENTS.md → docs/rules → these files.
+- Operational values belong in admin settings, not new PHP literals.
+- Same task: update `docs/` when behavior or schema changes.
+- New admin fields: ID+EN strings + tooltip keys in `lang/id.php` and `lang/en.php`.

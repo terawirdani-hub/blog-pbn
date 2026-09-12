@@ -1,0 +1,77 @@
+<?php
+declare(strict_types=1);
+
+$base = 'http://localhost:8080';
+$cookie = sys_get_temp_dir() . '/turbo-pbn-http.cookie';
+@unlink($cookie);
+$fail = 0;
+function hit(string $url, array $opts = []): array
+{
+    global $cookie, $fail;
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookie);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie);
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    if (!empty($opts['post'])) {
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $opts['post']);
+    }
+    $raw = curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $hs = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    curl_close($ch);
+    $headers = substr((string) $raw, 0, $hs);
+    $body = substr((string) $raw, $hs);
+    if (isset($opts['expect']) && $code !== $opts['expect']) {
+        fwrite(STDERR, "FAIL $url expected {$opts['expect']} got $code\n");
+        $GLOBALS['fail']++;
+    }
+    if (!empty($opts['contains']) && !str_contains($body . $headers, $opts['contains'])) {
+        fwrite(STDERR, "FAIL $url missing {$opts['contains']}\n");
+        $GLOBALS['fail']++;
+    }
+    return ['code' => $code, 'headers' => $headers, 'body' => $body];
+}
+
+function csrf(string $html): string
+{
+    if (preg_match('/name="csrf_token" value="([^"]+)"/', $html, $m)) {
+        return $m[1];
+    }
+    return '';
+}
+
+$home = hit($base . '/', ['expect' => 200]);
+hit($base . '/this-slug-does-not-exist', ['expect' => 404]);
+hit($base . '/sitemap.xml', ['expect' => 200, 'contains' => 'urlset']);
+hit($base . '/robots.txt', ['expect' => 200, 'contains' => 'User-agent']);
+$admin = hit($base . '/admin/index.php', ['expect' => 302]);
+$setup = hit($base . '/admin/setup.php', ['expect' => 200, 'contains' => 'csrf_token']);
+$token = csrf($setup['body']);
+$user = 'admin_' . substr(bin2hex(random_bytes(3)), 0, 6);
+$created = hit($base . '/admin/setup.php', [
+    'post' => [
+        'csrf_token' => $token,
+        'username' => $user,
+        'password' => 'password1234',
+        'locale' => 'en',
+    ],
+]);
+if ($created['code'] !== 302) {
+    fwrite(STDERR, "setup expected 302 got {$created['code']}\n{$created['body']}\n");
+    $fail++;
+}
+$dash = hit($base . '/admin/index.php', ['expect' => 200, 'contains' => 'Overview']);
+$posts = hit($base . '/admin/posts.php', ['expect' => 200]);
+$public = hit($base . '/', ['expect' => 200, 'contains' => 'Hello World']);
+$single = hit($base . '/hello-world', ['expect' => 200, 'contains' => 'first post']);
+$draftProbe = hit($base . '/admin/settings.php', ['expect' => 200, 'contains' => 'Site name']);
+
+if ($fail === 0) {
+    echo "HTTP OK\n";
+    exit(0);
+}
+echo "HTTP $fail failure(s)\n";
+exit(1);

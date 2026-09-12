@@ -1,0 +1,21 @@
+---
+description: Security requirements for Turbo PBN
+globs: "**/*.php"
+alwaysApply: false
+---
+
+# Security
+
+- Prepared statements only. Output: `h()` except intentional raw HTML slots.
+- POST mutations: `csrf_verify()`. Login: generic errors + lockout table.
+- Uploads through `store_uploaded_image()` only.
+- `require_role('admin')` for settings, users, audit, backup.
+
+```php
+// BAD
+echo $_GET['q'];
+$pdo->query("SELECT * FROM posts WHERE id = $id");
+// GOOD
+echo h((string)($_GET['q'] ?? ''));
+$st = $pdo->prepare('SELECT * FROM posts WHERE id = ?');
+```

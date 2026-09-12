@@ -1,0 +1,20 @@
+---
+description: Architecture patterns for Turbo PBN PHP
+globs: "**/*.php"
+alwaysApply: false
+---
+
+# Architecture
+
+- `declare(strict_types=1);` on every PHP file.
+- Bootstrap via `includes/bootstrap.php` only — do not open extra PDO connections.
+- Settings: `setting()` / `setting_set()`; add defaults in `setting_defaults()`.
+- Multi-step writes use a transaction. Slug conflicts: retry with numeric suffix.
+- CSS: tokens in `assets/css/tokens.css`, not one-off hex per page.
+
+```php
+// BAD
+$site = 'My Blog';
+// GOOD
+$site = setting('site_name');
+```

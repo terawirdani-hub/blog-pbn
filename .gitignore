@@ -1,0 +1,10 @@
+database/data.sqlite
+database/*.sqlite-wal
+database/*.sqlite-shm
+uploads/*
+!uploads/.gitkeep
+!uploads/.htaccess
+.DS_Store
+Thumbs.db
+*.zip
+*.log

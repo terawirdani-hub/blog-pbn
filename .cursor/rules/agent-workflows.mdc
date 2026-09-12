@@ -1,0 +1,10 @@
+---
+description: Task, deploy, and incident habits for agents
+alwaysApply: false
+---
+
+# Agent workflows
+
+- New feature: admin UI first; update specs + changelog; do not guess items in MASTER_PLAN section 10.
+- Deploy: ZIP to domain root (`scripts/pack.ps1`). Local verify: `php -S localhost:8080 router.php`.
+- Incident: fail closed, keep unpublished posts private, preserve audit_log. Do not delete the SQLite file unless the operator asks.

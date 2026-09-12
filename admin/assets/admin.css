@@ -1,0 +1,109 @@
+@import url("../../assets/css/tokens.css");
+
+* { box-sizing: border-box; }
+body.admin {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+a { color: var(--link); }
+.shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.side {
+  background: var(--bg-elev);
+  border-right: 1px solid var(--border);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.brand { font-weight: 700; text-decoration: none; color: var(--text); font-size: 1.15rem; }
+.side nav { display: flex; flex-direction: column; gap: 0.2rem; }
+.side nav a {
+  text-decoration: none;
+  color: var(--text);
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+}
+.side nav a.is-on, .side nav a:hover { background: var(--bg); }
+.who, .logout { font-size: 0.85rem; color: var(--muted); }
+.main { padding: var(--space-6); max-width: 980px; }
+h1 { margin: 0 0 var(--space-4); font-size: 1.6rem; }
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow);
+}
+.row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: var(--space-4); flex: 1; min-width: 220px; }
+.field.full { flex-basis: 100%; }
+label, .label-row { font-weight: 600; font-size: 0.92rem; }
+.label-row { display: inline-flex; align-items: center; gap: 0.4rem; }
+input[type="text"], input[type="password"], input[type="url"], input[type="number"], input[type="search"], input[type="color"], select, textarea {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  width: 100%;
+}
+textarea { min-height: 140px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font: inherit;
+}
+.btn.secondary { background: var(--accent); }
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn.danger { background: var(--danger); }
+.table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.table th, .table td { text-align: left; padding: 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.th-wrap { display: inline-flex; align-items: center; gap: 0.3rem; }
+.muted { color: var(--muted); }
+.flash { padding: 0.7rem 1rem; border-radius: 8px; margin-bottom: var(--space-4); }
+.flash-success { background: rgba(35, 134, 54, 0.15); border: 1px solid var(--accent); }
+.flash-error { background: rgba(209, 36, 47, 0.12); border: 1px solid var(--danger); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-3); }
+.stat { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); }
+.stat b { display: block; font-size: 1.4rem; }
+.tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: var(--space-4); }
+.tabs a { padding: 0.4rem 0.75rem; border-radius: 999px; text-decoration: none; border: 1px solid var(--border); color: var(--text); }
+.tabs a.is-on { background: var(--primary); color: #fff; border-color: transparent; }
+.tip { position: relative; border: 0; background: var(--border); color: var(--text); width: 1.15rem; height: 1.15rem; border-radius: 50%; cursor: help; padding: 0; font-size: 0.7rem; }
+.tip-mark { font-weight: 700; }
+.tip-box {
+  display: none;
+  position: absolute;
+  left: 1.3rem;
+  top: -0.2rem;
+  width: 240px;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  font-weight: 400;
+  text-align: left;
+}
+.tip-box strong { display: block; margin-bottom: 0.2rem; }
+.tip:hover .tip-box, .tip:focus .tip-box { display: block; }
+.auth-wrap { max-width: 440px; margin: 8vh auto; }
+@media (max-width: 800px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { border-right: 0; border-bottom: 1px solid var(--border); }
+}
