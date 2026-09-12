@@ -46,16 +46,22 @@ $posts = (int) db()->query('SELECT COUNT(*) FROM posts')->fetchColumn();
 $pub = (int) db()->query("SELECT COUNT(*) FROM posts WHERE status = 'published'")->fetchColumn();
 $drafts = (int) db()->query("SELECT COUNT(*) FROM posts WHERE status = 'draft'")->fetchColumn();
 $links = (int) db()->query('SELECT COUNT(*) FROM blogroll')->fetchColumn();
+$cats = (int) db()->query('SELECT COUNT(*) FROM categories')->fetchColumn();
 
 admin_layout_start(t('dash.title'), 'dash');
 ?>
 <h1><?= h(t('dash.title')) ?></h1>
-<p><?= h(t('dash.welcome')) ?></p>
+<p class="muted"><?= h(t('dash.welcome')) ?></p>
 <div class="stats">
     <div class="stat"><span><?= h(t('dash.posts')) ?></span><b><?= (int) $posts ?></b></div>
     <div class="stat"><span><?= h(t('dash.published')) ?></span><b><?= (int) $pub ?></b></div>
     <div class="stat"><span><?= h(t('dash.drafts')) ?></span><b><?= (int) $drafts ?></b></div>
+    <div class="stat"><span><?= h(t('nav.categories')) ?></span><b><?= (int) $cats ?></b></div>
     <div class="stat"><span><?= h(t('dash.links')) ?></span><b><?= (int) $links ?></b></div>
 </div>
+<p>
+    <a class="btn" href="<?= h(admin_url('post-edit.php')) ?>"><?= h(t('posts.new')) ?></a>
+    <a class="btn ghost" href="<?= h(admin_url('settings.php')) ?>"><?= h(t('nav.settings')) ?></a>
+</p>
 <?php
 admin_layout_end();

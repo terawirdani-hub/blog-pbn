@@ -33,6 +33,8 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/upload.php';
 require_once __DIR__ . '/html.php';
 require_once __DIR__ . '/frontend.php';
+require_once __DIR__ . '/theme.php';
+require_once __DIR__ . '/seo.php';
 
 start_secure_session();
 $pdo = db();

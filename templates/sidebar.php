@@ -8,11 +8,11 @@ $authorAvatar = setting('author_avatar_path');
 $socials = social_links();
 $cats = categories_with_counts();
 $trending = trending_posts(5, isset($excludeId) ? (int) $excludeId : null);
-$brand = setting('primary_color', '#1f6feb');
+$brand = public_palette_colors()['primary'];
 ?>
 <aside class="lg:col-span-3">
     <div class="space-y-6 lg:sticky lg:top-24">
-        <section class="rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <section class="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <div class="flex items-center gap-4">
                 <?php if ($authorAvatar !== ''): ?>
                     <img src="<?= h(media_url($authorAvatar)) ?>" alt="<?= h($authorName) ?>" class="h-16 w-16 rounded-full object-cover ring-2 ring-zinc-100 dark:ring-zinc-800">
@@ -20,8 +20,8 @@ $brand = setting('primary_color', '#1f6feb');
                     <div class="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-white" style="background: <?= h($brand) ?>"><?= h(author_initials($authorName)) ?></div>
                 <?php endif; ?>
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500"><?= h(t('public.author')) ?></p>
-                    <h2 class="text-lg font-bold text-zinc-900 dark:text-white"><?= h($authorName) ?></h2>
+                    <span class="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"><?= h(t('public.role_editor')) ?></span>
+                    <h2 class="mt-1 text-lg font-bold text-zinc-900 dark:text-white"><?= h($authorName) ?></h2>
                 </div>
             </div>
             <?php if ($authorBio !== ''): ?>
@@ -43,11 +43,13 @@ $brand = setting('primary_color', '#1f6feb');
                 <?php foreach ($trending as $i => $item): ?>
                     <li>
                         <a href="<?= h(url_path($item['slug'])) ?>" class="group flex gap-3">
-                            <span class="w-6 shrink-0 text-lg font-extrabold text-zinc-300 dark:text-zinc-600"><?= (int) $i + 1 ?></span>
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-extrabold text-white dark:bg-white dark:text-zinc-900"><?= (int) $i + 1 ?></span>
                             <?php if ($item['featured_image'] !== ''): ?>
                                 <img src="<?= h(media_url($item['featured_image'])) ?>" alt="" class="h-14 w-20 shrink-0 rounded-lg object-cover">
                             <?php else: ?>
-                                <div class="h-14 w-20 shrink-0 rounded-lg bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-800 dark:to-zinc-700"></div>
+                                <div class="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+                                    <?php editorial_cover('h-14 w-20', '', $item['category_name'] ?? null, $item['category_color'] ?? null); ?>
+                                </div>
                             <?php endif; ?>
                             <span class="min-w-0 text-sm font-semibold leading-snug text-zinc-800 group-hover:underline dark:text-zinc-100"><?= h($item['title']) ?></span>
                         </a>

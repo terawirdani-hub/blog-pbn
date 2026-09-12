@@ -5,7 +5,7 @@
 1. Apache (or `router.php`) sends public URLs to `index.php`.
 2. `includes/bootstrap.php` loads `config.php`, starts a secure session, opens SQLite, runs migrations, loads settings and i18n.
 3. Admin scripts live under `admin/` as discrete PHP pages (not a framework router).
-4. Public routes: `/`, `/page/{n}`, `/category/{slug}`, `/{slug}`, `/sitemap.xml`, `/robots.txt`.
+4. Public routes: `/`, `/page/{n}`, `/category/{slug}`, `/{slug}`, `/sitemap.xml`, `/rss.xml`, `/robots.txt`.
 
 ## Persistence
 
@@ -19,7 +19,7 @@ Key/value table `settings`. Never add a new operational constant in PHP. Default
 
 ## Templates
 
-`templates/*.php` receive variables from `index.php`. Style is a setting (`template_style`: `classic` | `magazine`) plus CSS variables from color settings.
+`templates/*.php` plus `templates/layouts/` and `templates/partials/`. Homepage layout and palette come from settings (`homepage_layout`, `color_palette`; 5×6 = 30 presets). Legacy `template_style` (`classic` | `magazine`) still maps if the new keys are empty. SEO head tags, JSON-LD, sitemap, and RSS are built in `includes/seo.php`.
 
 ## Logging
 

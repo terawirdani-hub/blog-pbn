@@ -1,5 +1,7 @@
     </div>
-    <?php include __DIR__ . '/sidebar.php'; ?>
+    <?php if (public_layout_has_sidebar()): ?>
+        <?php include __DIR__ . '/sidebar.php'; ?>
+    <?php endif; ?>
 </div>
 <?php if (setting('ad_footer_html') !== ''): ?>
     <div class="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8"><?= setting('ad_footer_html') ?></div>

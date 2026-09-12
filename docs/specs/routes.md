@@ -11,7 +11,8 @@ No JSON API in v1. Forms POST to the same admin page.
 | `/category/{slug}` | Published posts in a category |
 | `/category/{slug}/page/{n}` | Category pagination |
 | `/{slug}` | Published post; unknown or draft → 404 |
-| `/sitemap.xml` | Published posts |
+| `/sitemap.xml` | Published posts + categories; `lastmod` and `image:image` |
+| `/rss.xml` | Latest 50 published posts (also `/feed`) |
 | `/robots.txt` | Body from settings |
 | `/uploads/...` | Static files |
 

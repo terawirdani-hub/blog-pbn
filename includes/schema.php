@@ -123,5 +123,7 @@ ALTER TABLE posts ADD COLUMN category_id INTEGER REFERENCES categories(id) ON DE
 CREATE INDEX idx_posts_category ON posts (category_id);
 SQL
         ,
+        3 => "ALTER TABLE posts ADD COLUMN focus_keyword TEXT NOT NULL DEFAULT ''",
+        4 => "ALTER TABLE posts ADD COLUMN schema_type TEXT NOT NULL DEFAULT 'NewsArticle'",
     ];
 }

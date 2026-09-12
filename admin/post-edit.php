@@ -27,9 +27,11 @@ if (is_post()) {
     $status = ($_POST['status'] ?? 'draft') === 'published' ? 'published' : 'draft';
     $seoTitle = trim((string) ($_POST['seo_title'] ?? ''));
     $seoDesc = trim((string) ($_POST['seo_description'] ?? ''));
-    $seoKeys = trim((string) ($_POST['seo_keywords'] ?? ''));
+    $focusKeyword = trim((string) ($_POST['focus_keyword'] ?? ''));
+    $seoKeys = $focusKeyword !== '' ? $focusKeyword : trim((string) ($_POST['seo_keywords'] ?? ''));
     $canonical = trim((string) ($_POST['canonical_url'] ?? ''));
-    $robots = isset($_POST['robots_index']) ? 1 : 0;
+    $robots = (string) ($_POST['robots_index'] ?? '1') === '0' ? 0 : 1;
+    $schemaType = ($_POST['schema_type'] ?? 'NewsArticle') === 'BlogPosting' ? 'BlogPosting' : 'NewsArticle';
     $image = $post['featured_image'] ?? '';
     $og = trim((string) ($_POST['og_image'] ?? ($post['og_image'] ?? '')));
     $categoryId = (int) ($_POST['category_id'] ?? 0);
@@ -73,12 +75,12 @@ if (is_post()) {
                 $st = db()->prepare(
                     'UPDATE posts SET title=?, slug=?, excerpt=?, content=?, featured_image=?, status=?,
                      seo_title=?, seo_description=?, seo_keywords=?, canonical_url=?, og_image=?,
-                     robots_index=?, published_at=?, updated_at=?, category_id=? WHERE id=?'
+                     robots_index=?, published_at=?, updated_at=?, category_id=?, focus_keyword=?, schema_type=? WHERE id=?'
                 );
                 $st->execute([
                     $title, $slug, $excerpt, $content, $image, $status,
                     $seoTitle, $seoDesc, $seoKeys, $canonical, $og,
-                    $robots, $publishedAt, $now, $categoryId > 0 ? $categoryId : null, $id,
+                    $robots, $publishedAt, $now, $categoryId > 0 ? $categoryId : null, $focusKeyword, $schemaType, $id,
                 ]);
                 $action = $status === 'published' ? 'post.publish' : 'post.update';
                 audit_write($action, 'post', (string) $id, ['title' => $title, 'status' => $status]);
@@ -102,6 +104,8 @@ if (is_post()) {
                     'created_at' => $now,
                     'updated_at' => $now,
                     'category_id' => $categoryId > 0 ? $categoryId : null,
+                    'focus_keyword' => $focusKeyword,
+                    'schema_type' => $schemaType,
                 ]);
                 audit_write($status === 'published' ? 'post.publish' : 'post.create', 'post', (string) $newId, ['title' => $title]);
             }
@@ -126,6 +130,8 @@ if (is_post()) {
         'robots_index' => $robots,
         'featured_image' => $image,
         'category_id' => $categoryId,
+        'focus_keyword' => $focusKeyword,
+        'schema_type' => $schemaType,
     ]);
 }
 
@@ -177,32 +183,49 @@ admin_layout_start($pageTitle, 'posts');
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="field">
-        <label><?= field_label('posts.field.seo_title', 'seo_title') ?></label>
-        <input type="text" name="seo_title" value="<?= h($post['seo_title'] ?? '') ?>">
+    <div class="seo-box">
+        <h2><?= h(t('posts.seo.panel')) ?></h2>
+        <div class="field">
+            <label><?= field_label('posts.field.focus_keyword', 'focus_keyword') ?></label>
+            <input type="text" name="focus_keyword" value="<?= h(($post['focus_keyword'] ?? '') !== '' ? $post['focus_keyword'] : ($post['seo_keywords'] ?? '')) ?>">
+        </div>
+        <div class="field">
+            <label><?= field_label('posts.field.seo_title', 'seo_title') ?></label>
+            <input type="text" name="seo_title" data-count-target="60" value="<?= h($post['seo_title'] ?? '') ?>">
+            <p class="char-meter muted" data-count-out>0 / 60</p>
+        </div>
+        <div class="field">
+            <label><?= field_label('posts.field.seo_description', 'seo_description') ?></label>
+            <textarea name="seo_description" data-count-target="155"><?= h($post['seo_description'] ?? '') ?></textarea>
+            <p class="char-meter muted" data-count-out>0 / 155</p>
+        </div>
+        <div class="field">
+            <label><?= field_label('posts.field.schema_type', 'schema_type') ?></label>
+            <select name="schema_type">
+                <option value="NewsArticle" <?= (($post['schema_type'] ?? 'NewsArticle') !== 'BlogPosting') ? 'selected' : '' ?>><?= h(t('posts.schema.news')) ?></option>
+                <option value="BlogPosting" <?= (($post['schema_type'] ?? '') === 'BlogPosting') ? 'selected' : '' ?>><?= h(t('posts.schema.blog')) ?></option>
+            </select>
+        </div>
+        <div class="field">
+            <label><?= field_label('posts.field.robots', 'post_robots') ?></label>
+            <select name="robots_index">
+                <option value="1" <?= ($post === null || (int) ($post['robots_index'] ?? 1) === 1) ? 'selected' : '' ?>><?= h(t('posts.robots.index')) ?></option>
+                <option value="0" <?= ($post !== null && (int) ($post['robots_index'] ?? 1) === 0) ? 'selected' : '' ?>><?= h(t('posts.robots.noindex')) ?></option>
+            </select>
+        </div>
+        <div class="field">
+            <label><?= field_label('posts.field.canonical', 'canonical') ?></label>
+            <input type="url" name="canonical_url" placeholder="https://" value="<?= h($post['canonical_url'] ?? '') ?>">
+        </div>
+        <div class="field">
+            <label><?= field_label('posts.field.og_image', 'og_image') ?></label>
+            <input type="text" name="og_image" value="<?= h($post['og_image'] ?? '') ?>">
+            <input type="file" name="og_image_file" accept="image/jpeg,image/png,image/gif,image/webp">
+        </div>
     </div>
-    <div class="field">
-        <label><?= field_label('posts.field.seo_description', 'seo_description') ?></label>
-        <textarea name="seo_description"><?= h($post['seo_description'] ?? '') ?></textarea>
-    </div>
-    <div class="field">
-        <label><?= field_label('posts.field.seo_keywords', 'seo_keywords') ?></label>
-        <input type="text" name="seo_keywords" value="<?= h($post['seo_keywords'] ?? '') ?>">
-    </div>
-    <div class="field">
-        <label><?= field_label('posts.field.canonical', 'canonical') ?></label>
-        <input type="url" name="canonical_url" value="<?= h($post['canonical_url'] ?? '') ?>">
-    </div>
-    <div class="field">
-        <label><?= field_label('posts.field.og_image', 'og_image') ?></label>
-        <input type="text" name="og_image" value="<?= h($post['og_image'] ?? '') ?>">
-        <input type="file" name="og_image_file" accept="image/jpeg,image/png,image/gif,image/webp">
-    </div>
-    <div class="field">
-        <label><?= field_label('posts.field.robots', 'post_robots') ?></label>
-        <input type="checkbox" name="robots_index" value="1" <?= ($post === null || (int) ($post['robots_index'] ?? 1) === 1) ? 'checked' : '' ?>>
-    </div>
+    <p style="margin-top:1rem">
     <button class="btn" type="submit"><?= h(t('ui.save')) ?></button>
     <a class="btn ghost" href="<?= h(admin_url('posts.php')) ?>"><?= h(t('ui.cancel')) ?></a>
+    </p>
 </form>
 <?php admin_layout_end();

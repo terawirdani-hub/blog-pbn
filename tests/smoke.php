@@ -70,6 +70,8 @@ require $root . '/includes/auth.php';
 require $root . '/includes/upload.php';
 require $root . '/includes/html.php';
 require $root . '/includes/frontend.php';
+require $root . '/includes/theme.php';
+require $root . '/includes/seo.php';
 
 session_start();
 $pdo = db();
@@ -126,6 +128,10 @@ if ($pub !== 1) {
 setting_set('site_name', 'Smoke Site', $id1);
 if (setting('site_name') !== 'Smoke Site') {
     fail('settings roundtrip');
+}
+
+if (count(theme_presets()) !== 30) {
+    fail('theme presets should be 30');
 }
 
 if ($failures === 0) {

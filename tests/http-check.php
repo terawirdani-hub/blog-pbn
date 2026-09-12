@@ -43,9 +43,11 @@ function csrf(string $html): string
     return '';
 }
 
-hit($base . '/', ['expect' => 200]);
 hit($base . '/this-slug-does-not-exist', ['expect' => 404]);
 hit($base . '/sitemap.xml', ['expect' => 200, 'contains' => 'urlset']);
+hit($base . '/rss.xml', ['expect' => 200, 'contains' => '<rss']);
+hit($base . '/', ['expect' => 200, 'contains' => 'max-image-preview:large']);
+hit($base . '/', ['expect' => 200, 'contains' => 'application/ld+json']);
 hit($base . '/robots.txt', ['expect' => 200, 'contains' => 'User-agent']);
 
 $login = hit($base . '/admin/index.php', ['expect' => 200, 'contains' => 'csrf_token']);

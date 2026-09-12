@@ -15,13 +15,15 @@ Single source of truth for direction. Update this file when priorities change.
 - Editorial public theme (Tailwind CDN)
 - Audit log
 - Config JSON export/import + SQLite download
-- `sitemap.xml` and `robots.txt`
+- `sitemap.xml` (lastmod + image thumbnails) and `robots.txt`
+- Dynamic `/rss.xml` feed
+- Per-post SEO panel (focus keyword, meta counters, schema type, robots, canonical)
+- 30 public template presets (5 layouts × 6 palettes)
 
 ## Next (only after product owner asks)
 
 - Tags
 - Comments
-- Additional public template styles
 - Image optimization / media library
 - Multi-site control panel (one dashboard for many domains)
 

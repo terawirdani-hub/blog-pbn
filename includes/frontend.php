@@ -91,13 +91,16 @@ function theme_toggle_url(): string
     if ($path === '/index.php') {
         $path = '/';
     }
-    return $path . '?theme=' . $next;
+    $qs = $_GET;
+    $qs['theme'] = $next;
+    return $path . '?' . http_build_query($qs);
 }
 
 function post_list_sql(): string
 {
     return 'SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.featured_image, p.published_at, p.author_id,
             p.category_id, p.seo_title, p.seo_description, p.canonical_url, p.og_image, p.robots_index,
+            p.updated_at, p.focus_keyword, p.schema_type,
             c.name AS category_name, c.slug AS category_slug, c.color AS category_color,
             u.username AS author_username
          FROM posts p
@@ -178,4 +181,27 @@ function blogroll_items(): array
 function blogroll_rel_kind(string $rel): string
 {
     return str_contains(strtolower($rel), 'nofollow') ? 'nofollow' : 'dofollow';
+}
+
+function editorial_cover(string $aspectClass, string $title, ?string $categoryName = null, ?string $categoryColor = null): void
+{
+    $colors = function_exists('public_palette_colors') ? public_palette_colors() : ['primary' => setting('primary_color', '#2563eb'), 'accent' => setting('accent_color', '#0f172a')];
+    $c1 = $colors['primary'];
+    $c2 = $colors['accent'];
+    $catColor = $categoryColor ?: $c1;
+    ?>
+    <div class="<?= h($aspectClass) ?> relative overflow-hidden">
+        <div class="absolute inset-0" style="background: linear-gradient(135deg, <?= h($c1) ?> 0%, #0f172a 48%, <?= h($c2) ?> 100%);"></div>
+        <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 20% 20%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 0%, #fff 1.5px, transparent 1.5px), radial-gradient(circle at 50% 80%, #fff 1px, transparent 1px); background-size: 28px 28px, 42px 42px, 36px 36px;"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"></div>
+        <div class="relative flex h-full flex-col justify-end p-5 sm:p-7">
+            <?php if ($categoryName): ?>
+                <span class="mb-2 inline-flex w-fit rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm" style="background: <?= h($catColor) ?>"><?= h($categoryName) ?></span>
+            <?php endif; ?>
+            <?php if ($title !== ''): ?>
+                <p class="line-clamp-2 text-lg font-extrabold leading-snug text-white drop-shadow sm:text-xl"><?= h($title) ?></p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
 }

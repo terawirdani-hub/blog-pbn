@@ -6,7 +6,7 @@
 - CSRF token on every state-changing POST.
 - `session_regenerate_id(true)` on login and setup.
 - Passwords: `password_hash` / `password_verify`; min 10 characters.
-- Uploads: images only (jpeg/png/gif/webp); random stored name; deny PHP execution in `uploads/` and deny HTTP to `database/`.
+- Uploads: jpeg/png/gif/webp for content images; branding (logo/favicon) also allows svg/ico after checks; random stored name; deny PHP in `uploads/`.
 - Strip `<script>`, `<iframe>`, `on*` attributes from post HTML. Do not strip tracking/ad settings (admin-only raw HTML).
 - Login: 5 failures / 15 minutes / IP+username → lock with a generic error (do not reveal whether the user exists).
 - Roles: check on every admin page via `require_login()` / `require_role()`.

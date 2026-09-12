@@ -66,7 +66,7 @@ project-root/
 ├── includes/                 # Shared PHP (auth, db, i18n, settings)
 ├── lang/                     # id.php / en.php
 ├── admin/                    # Dashboard
-├── templates/                # Public layout partials
+├── templates/                # Public layout partials + layouts/ (5 homepage frames)
 ├── assets/                   # Public CSS (tokens + themes)
 ├── database/                 # SQLite file (gitignored) + deny-all htaccess
 ├── uploads/                  # Images (gitignored) + PHP execution denied
@@ -223,11 +223,13 @@ See Section 6.3.
 | Setting | Description | Changed by | Notes |
 |---------|-------------|------------|-------|
 | Site name, tagline, footer | Branding | admin | |
-| Colors (primary, accent) | Appearance | admin | CSS variables |
 | Logo, favicon | Appearance | admin | Uploads |
 | Public locale | ID or EN for the blog | admin | |
 | Public theme default | Light or Dark | admin | Visitors may override |
-| Template style | Reserved (classic / magazine) | admin | Public layout is the editorial theme |
+| Template style | Maps to layout (`classic` → newspaper, `magazine` → magazine) | admin | Kept for older copies |
+| Homepage layout | magazine, tech, bento, newspaper, masonry | admin | |
+| Color palette | slate, crimson, emerald, violet, amber, mono | admin | Also writes primary/accent |
+| Colors (primary, accent) | Appearance | admin | Synced from palette |
 | Posts per page | Homepage pagination | admin | |
 | Homepage intro | HTML/text above the list | admin | |
 | Ad slots | Header / sidebar / in-article / footer HTML | admin | Raw HTML |

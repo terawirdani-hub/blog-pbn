@@ -24,7 +24,7 @@ Change this password in **Profile** after the first sign-in. To recreate or rese
 
 ## Daily use (no code)
 
-1. **Settings** — site name, colors, template style (classic / magazine), ads, tracking, robots.txt
+1. **Settings** — site name, 30 homepage templates (5 layouts × 6 palettes), ads, tracking, robots.txt, logo/favicon
 2. **Posts** — write articles and on-page SEO
 3. **Blogroll** — sidebar links
 4. **Users** — extra admin or editor accounts

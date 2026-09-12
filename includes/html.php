@@ -12,7 +12,7 @@ function sanitize_post_html(string $html): string
 
 function is_reserved_public_slug(string $slug): bool
 {
-    return in_array($slug, ['admin', 'page', 'category', 'uploads', 'assets', 'sitemap.xml', 'robots.txt'], true);
+    return in_array($slug, ['admin', 'page', 'category', 'uploads', 'assets', 'sitemap.xml', 'robots.txt', 'rss.xml', 'feed'], true);
 }
 
 function unique_post_slug(PDO $pdo, string $base, ?int $ignoreId = null): string
@@ -43,14 +43,22 @@ function insert_post_with_slug(PDO $pdo, array $fields): int
     $sql = 'INSERT INTO posts (
         title, slug, excerpt, content, featured_image, status,
         seo_title, seo_description, seo_keywords, canonical_url, og_image,
-        robots_index, published_at, author_id, created_at, updated_at, category_id
+        robots_index, published_at, author_id, created_at, updated_at, category_id,
+        focus_keyword, schema_type
     ) VALUES (
         :title, :slug, :excerpt, :content, :featured_image, :status,
         :seo_title, :seo_description, :seo_keywords, :canonical_url, :og_image,
-        :robots_index, :published_at, :author_id, :created_at, :updated_at, :category_id
+        :robots_index, :published_at, :author_id, :created_at, :updated_at, :category_id,
+        :focus_keyword, :schema_type
     )';
     if (!array_key_exists('category_id', $fields)) {
         $fields['category_id'] = null;
+    }
+    if (!array_key_exists('focus_keyword', $fields)) {
+        $fields['focus_keyword'] = $fields['seo_keywords'] ?? '';
+    }
+    if (!array_key_exists('schema_type', $fields)) {
+        $fields['schema_type'] = 'NewsArticle';
     }
     $st = $pdo->prepare($sql);
     $slug = $fields['slug'];

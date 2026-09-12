@@ -33,7 +33,9 @@ SQLite. Timestamps are UTC ISO-8601 (`Y-m-d H:i:s`).
 | excerpt, content | TEXT | content is HTML (admin-only authoring) |
 | featured_image | TEXT | relative path under uploads |
 | status | TEXT | `draft` or `published` |
-| seo_title, seo_description, seo_keywords | TEXT | |
+| seo_title, seo_description, seo_keywords | TEXT | keywords also mirrored from focus_keyword |
+| focus_keyword | TEXT | primary phrase; default empty on existing rows |
+| schema_type | TEXT | `NewsArticle` (default) or `BlogPosting` |
 | canonical_url | TEXT | optional |
 | og_image | TEXT | optional; fallback featured image |
 | robots_index | INTEGER | 1 index, 0 noindex |

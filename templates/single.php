@@ -5,8 +5,17 @@ $img = $post['featured_image'] !== '' ? media_url($post['featured_image']) : '';
 $author = author_display_name($post['author_username'] ?? null);
 $mins = reading_minutes((string) $post['content']);
 $avatar = setting('author_avatar_path');
-$brand = setting('primary_color', '#1f6feb');
+$brand = public_palette_colors()['primary'];
 ?>
+<nav class="mb-6 text-sm text-zinc-500" aria-label="breadcrumb">
+    <a class="hover:underline" href="<?= h(url_path()) ?>"><?= h(setting('site_name')) ?></a>
+    <?php if (!empty($post['category_name'])): ?>
+        <span aria-hidden="true"> / </span>
+        <a class="hover:underline" href="<?= h(url_path('category/' . $post['category_slug'])) ?>"><?= h($post['category_name']) ?></a>
+    <?php endif; ?>
+    <span aria-hidden="true"> / </span>
+    <span class="text-zinc-700 dark:text-zinc-300"><?= h($post['title']) ?></span>
+</nav>
 <article>
     <?php if (!empty($post['category_name'])): ?>
         <a href="<?= h(url_path('category/' . $post['category_slug'])) ?>" class="inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide" style="background: <?= h((string) $post['category_color']) ?>22; color: <?= h((string) $post['category_color']) ?>"><?= h($post['category_name']) ?></a>

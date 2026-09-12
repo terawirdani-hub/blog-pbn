@@ -2,42 +2,45 @@
 declare(strict_types=1);
 
 $theme = public_theme();
-$primary = setting('primary_color', '#1f6feb');
-$accent = setting('accent_color', '#238636');
+$colors = public_palette_colors();
+$primary = $colors['primary'];
+$accent = $colors['accent'];
 $siteName = setting('site_name');
 $tagline = setting('site_tagline');
 $logo = setting('logo_path');
 $favicon = setting('favicon_path');
-$toggleTo = $theme === 'dark' ? 'light' : 'dark';
 $toggleUrl = theme_toggle_url();
 $navCategories = categories_with_counts();
 $isDark = $theme === 'dark';
+$layout = public_layout();
+$palette = public_palette();
+$searchQ = trim((string) ($_GET['q'] ?? ''));
+if (!isset($seo) || !is_array($seo)) {
+    $seo = [
+        'title' => $title ?? $siteName,
+        'description' => $description ?? '',
+        'canonical' => $canonical ?? url_path(),
+        'robots' => $index ?? seo_robots(true),
+        'og_type' => 'website',
+        'og_image' => isset($og) ? seo_absolute_url((string) $og) : seo_default_image(),
+        'jsonld' => seo_json(seo_website_graph()),
+    ];
+}
 header('Content-Type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
-<html lang="<?= h(locale()) ?>" class="<?= $isDark ? 'dark' : '' ?>" data-theme="<?= h($theme) ?>">
+<html lang="<?= h(locale()) ?>" class="<?= $isDark ? 'dark' : '' ?>" data-theme="<?= h($theme) ?>" data-layout="<?= h($layout) ?>" data-palette="<?= h($palette) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= h(($title ?? $siteName) . (isset($title) && $title !== $siteName ? ' — ' . $siteName : '')) ?></title>
-    <?php if (!empty($description)): ?>
-        <meta name="description" content="<?= h($description) ?>">
-    <?php endif; ?>
-    <?php if (!empty($index)): ?>
-        <meta name="robots" content="<?= h($index) ?>">
-    <?php endif; ?>
-    <?php if (!empty($canonical)): ?>
-        <link rel="canonical" href="<?= h($canonical) ?>">
-    <?php endif; ?>
-    <?php if (!empty($og)): ?>
-        <meta property="og:image" content="<?= h(str_starts_with((string) $og, 'http') ? $og : url_path((string) $og)) ?>">
-    <?php endif; ?>
+    <?php seo_print_head($seo); ?>
     <?php if ($favicon !== ''): ?>
-        <link rel="icon" href="<?= h(media_url($favicon)) ?>">
+        <link rel="icon" type="<?= h(favicon_type($favicon)) ?>" href="<?= h(media_url($favicon)) ?>">
+        <link rel="apple-touch-icon" href="<?= h(media_url($favicon)) ?>">
     <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script>
       tailwind.config = {
@@ -46,6 +49,7 @@ header('Content-Type: text/html; charset=utf-8');
           extend: {
             fontFamily: {
               sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+              serif: ['Source Serif 4', 'Georgia', 'serif'],
             },
             maxWidth: { '7xl': '80rem' }
           }
@@ -53,8 +57,10 @@ header('Content-Type: text/html; charset=utf-8');
       }
     </script>
     <style>
-      :root { --brand: <?= h($primary) ?>; --accent: <?= h($accent) ?>; }
+      :root { --brand: <?= h($primary) ?>; --accent: <?= h($accent) ?>; --soft: <?= h($colors['soft']) ?>; }
       html { scroll-behavior: smooth; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+      [data-layout="newspaper"] .font-serif { font-family: 'Source Serif 4', Georgia, serif; }
     </style>
     <?= setting('tracking_head_html') ?>
 </head>
@@ -76,6 +82,11 @@ header('Content-Type: text/html; charset=utf-8');
             <?php endforeach; ?>
         </nav>
         <div class="ml-auto flex items-center gap-2">
+            <form action="<?= h(url_path()) ?>" method="get" role="search" class="hidden sm:block">
+                <label class="sr-only" for="q"><?= h(t('ui.search')) ?></label>
+                <input id="q" type="search" name="q" value="<?= h($searchQ) ?>" placeholder="<?= h(t('ui.search')) ?>"
+                       class="w-36 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-800 outline-none focus:w-48 focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 lg:w-44">
+            </form>
             <a href="<?= h($toggleUrl) ?>"
                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
                title="<?= h(t('public.theme_toggle')) ?>"
@@ -100,5 +111,5 @@ header('Content-Type: text/html; charset=utf-8');
 <?php if (setting('ad_header_html') !== ''): ?>
     <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8"><?= setting('ad_header_html') ?></div>
 <?php endif; ?>
-<div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-8 sm:px-6 lg:grid-cols-10 lg:gap-12 lg:px-8 lg:py-12">
-    <div class="min-w-0 lg:col-span-7">
+<div class="<?= h(public_shell_class()) ?>">
+    <div class="<?= h(public_main_class()) ?>">
