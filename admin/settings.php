@@ -75,7 +75,8 @@ if (is_post()) {
                 setting_set($k, $v, $uid);
             }
             apply_branding_from_post($uid, $changed);
-        } elseif ($tab === 'appearance') {
+        } elseif ($tab === 'appearance' || isset($_POST['save_appearance'])) {
+            $tab = 'appearance';
             $publicTheme = ($_POST['public_theme'] ?? 'light') === 'dark' ? 'dark' : 'light';
             $map = resolve_template_from_post($_POST);
             $map['public_theme'] = $publicTheme;
@@ -241,19 +242,38 @@ admin_layout_start(t('settings.title'), 'settings');
         <div class="settings-grid">
             <section class="card" style="grid-column: 1 / -1">
                 <h2><?= h(t('settings.card.templates')) ?></h2>
-                <div class="field"><label><?= field_label('settings.template_preset', 'template_preset') ?></label>
-                    <select name="template_preset" id="template-preset">
-                        <?php foreach (theme_presets() as $id => $preset): ?>
-                            <option value="<?= h($id) ?>" <?= current_template_preset_id() === $id ? 'selected' : '' ?>
-                                    data-layout="<?= h($preset['layout']) ?>" data-palette="<?= h($preset['palette']) ?>">
-                                <?= h(t('settings.preset_item', [
-                                    'n' => $id,
-                                    'layout' => t('settings.layout.' . $preset['layout']),
-                                    'palette' => t('settings.palette.' . $preset['palette']),
-                                ])) ?>
-                            </option>
-                        <?php endforeach; ?>
+                <div class="field">
+                    <label><?= field_label('settings.template_preset', 'template_preset') ?></label>
+                    <?php
+                    $selectedPreset = current_template_preset_id();
+                    $presetGroups = [];
+                    foreach (theme_presets() as $id => $preset) {
+                        $presetGroups[$preset['layout']][$id] = $preset;
+                    }
+                    ?>
+                    <select name="template_preset" id="template-preset" class="template-preset-select" size="12">
+                        <?php
+                        $layoutIndex = 1;
+                        foreach ($presetGroups as $layoutKey => $group):
+                        ?>
+                            <optgroup label="<?= h(t('settings.layout_group', ['n' => (string) $layoutIndex, 'layout' => t('settings.layout.' . $layoutKey)])) ?>">
+                                <?php foreach ($group as $id => $preset): ?>
+                                    <option value="<?= h($id) ?>" <?= $selectedPreset === $id ? 'selected' : '' ?>
+                                            data-layout="<?= h($preset['layout']) ?>" data-palette="<?= h($preset['palette']) ?>">
+                                        <?= h(t('settings.preset_named', [
+                                            'n' => $id,
+                                            'layout' => t('settings.layout.' . $preset['layout']),
+                                            'palette' => t('settings.palette.' . $preset['palette']),
+                                        ])) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </optgroup>
+                        <?php
+                            $layoutIndex++;
+                        endforeach;
+                        ?>
                     </select>
+                    <p class="muted"><?= h(t('settings.preset_count', ['n' => (string) count(theme_presets())])) ?></p>
                 </div>
                 <p class="muted"><?= h(t('settings.layout_help')) ?></p>
                 <div class="tpl-grid" data-layout-grid>
@@ -280,6 +300,9 @@ admin_layout_start(t('settings.title'), 'settings');
                         <option value="light" <?= setting('public_theme') === 'light' ? 'selected' : '' ?>><?= h(t('ui.theme.light')) ?></option>
                         <option value="dark" <?= setting('public_theme') === 'dark' ? 'selected' : '' ?>><?= h(t('ui.theme.dark')) ?></option>
                     </select></div>
+                <p class="appearance-save">
+                    <button type="submit" name="save_appearance" value="1" class="btn save-appearance px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg"><?= h(t('settings.save_changes')) ?></button>
+                </p>
             </section>
             <section class="card">
                 <h2><?= h(t('settings.card.identity')) ?></h2>

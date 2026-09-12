@@ -53,6 +53,7 @@ function theme_presets(): array
             $id = sprintf('%02d', $n);
             $out[$id] = [
                 'id' => $id,
+                'n' => $n,
                 'layout' => $layout,
                 'palette' => $palette,
             ];
@@ -62,9 +63,45 @@ function theme_presets(): array
     return $out;
 }
 
+function normalize_template_id(string $value): string
+{
+    $n = (int) preg_replace('/\D+/', '', $value);
+    if ($n < 1 || $n > 30) {
+        return '';
+    }
+    return sprintf('%02d', $n);
+}
+
+function active_template_id(): string
+{
+    $id = normalize_template_id(setting('active_template'));
+    if ($id !== '') {
+        return $id;
+    }
+    $layout = setting('homepage_layout');
+    $palette = setting('color_palette');
+    foreach (theme_presets() as $presetId => $preset) {
+        if ($preset['layout'] === $layout && $preset['palette'] === $palette) {
+            return $presetId;
+        }
+    }
+    return '01';
+}
+
+function active_template_preset(): array
+{
+    $presets = theme_presets();
+    $id = active_template_id();
+    return $presets[$id] ?? $presets['01'];
+}
+
 function public_layout(): string
 {
+    $preset = active_template_preset();
     $allowed = array_keys(theme_layouts());
+    if (in_array($preset['layout'], $allowed, true)) {
+        return $preset['layout'];
+    }
     $value = setting('homepage_layout');
     if (in_array($value, $allowed, true)) {
         return $value;
@@ -74,7 +111,11 @@ function public_layout(): string
 
 function public_palette(): string
 {
+    $preset = active_template_preset();
     $allowed = array_keys(theme_palettes());
+    if (in_array($preset['palette'], $allowed, true)) {
+        return $preset['palette'];
+    }
     $value = setting('color_palette');
     if (in_array($value, $allowed, true)) {
         return $value;
@@ -98,14 +139,7 @@ function public_layout_has_sidebar(?string $layout = null): bool
 
 function current_template_preset_id(): string
 {
-    $layout = public_layout();
-    $palette = public_palette();
-    foreach (theme_presets() as $id => $preset) {
-        if ($preset['layout'] === $layout && $preset['palette'] === $palette) {
-            return $id;
-        }
-    }
-    return '01';
+    return active_template_id();
 }
 
 function normalize_homepage_layout(string $value): string
@@ -131,8 +165,29 @@ function apply_template_choice(string $layout, string $palette): array
 {
     $layout = normalize_homepage_layout($layout);
     $palette = normalize_color_palette($palette);
+    $id = '01';
+    foreach (theme_presets() as $presetId => $preset) {
+        if ($preset['layout'] === $layout && $preset['palette'] === $palette) {
+            $id = $presetId;
+            break;
+        }
+    }
+    return apply_template_id($id);
+}
+
+function apply_template_id(string $id): array
+{
+    $id = normalize_template_id($id);
+    $presets = theme_presets();
+    if ($id === '' || !isset($presets[$id])) {
+        $id = '01';
+    }
+    $preset = $presets[$id];
+    $layout = $preset['layout'];
+    $palette = $preset['palette'];
     $colors = theme_palettes()[$palette];
     return [
+        'active_template' => $id,
         'homepage_layout' => $layout,
         'color_palette' => $palette,
         'primary_color' => $colors['primary'],
@@ -143,15 +198,14 @@ function apply_template_choice(string $layout, string $palette): array
 
 function resolve_template_from_post(array $post): array
 {
+    $fromSelect = normalize_template_id((string) ($post['template_preset'] ?? $post['active_template'] ?? ''));
+    if ($fromSelect !== '') {
+        return apply_template_id($fromSelect);
+    }
     if (!empty($post['homepage_layout']) && !empty($post['color_palette'])) {
         return apply_template_choice((string) $post['homepage_layout'], (string) $post['color_palette']);
     }
-    $presetId = preg_replace('/\D+/', '', (string) ($post['template_preset'] ?? ''));
-    $presets = theme_presets();
-    if ($presetId !== '' && isset($presets[$presetId])) {
-        return apply_template_choice($presets[$presetId]['layout'], $presets[$presetId]['palette']);
-    }
-    return apply_template_choice('magazine', 'slate');
+    return apply_template_id('01');
 }
 
 function public_shell_class(): string

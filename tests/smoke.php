@@ -133,6 +133,20 @@ if (setting('site_name') !== 'Smoke Site') {
 if (count(theme_presets()) !== 30) {
     fail('theme presets should be 30');
 }
+$presets = theme_presets();
+if (!isset($presets['01'], $presets['12'], $presets['18'], $presets['24'], $presets['30'])) {
+    fail('theme preset ids 01-30');
+}
+if ($presets['01']['layout'] !== 'magazine' || $presets['07']['layout'] !== 'tech' || $presets['13']['layout'] !== 'bento' || $presets['19']['layout'] !== 'newspaper' || $presets['25']['layout'] !== 'masonry') {
+    fail('theme preset layout bands');
+}
+if ($presets['30']['palette'] !== 'mono' || $presets['06']['palette'] !== 'mono') {
+    fail('theme preset palettes');
+}
+$applied = apply_template_id('22');
+if (($applied['active_template'] ?? '') !== '22' || ($applied['homepage_layout'] ?? '') !== 'newspaper') {
+    fail('apply_template_id 22');
+}
 $tok = seo_verification_token('<meta name="google-site-verification" content="AbC_12-3">');
 if ($tok !== 'AbC_12-3') {
     fail('seo verification parse');

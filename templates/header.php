@@ -62,10 +62,16 @@ header('Content-Type: text/html; charset=utf-8');
       html { scroll-behavior: smooth; }
       .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       [data-layout="newspaper"] .font-serif { font-family: 'Source Serif 4', Georgia, serif; }
+      html[data-palette="slate"] { --brand: #2563eb; --accent: #0f172a; --soft: #38bdf8; }
+      html[data-palette="crimson"] { --brand: #e11d48; --accent: #881337; --soft: #fb7185; }
+      html[data-palette="emerald"] { --brand: #059669; --accent: #064e3b; --soft: #34d399; }
+      html[data-palette="violet"] { --brand: #7c3aed; --accent: #4c1d95; --soft: #c4b5fd; }
+      html[data-palette="amber"] { --brand: #d97706; --accent: #78350f; --soft: #fbbf24; }
+      html[data-palette="mono"] { --brand: #18181b; --accent: #3f3f46; --soft: #a1a1aa; }
     </style>
     <?= setting('tracking_head_html') ?>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-200">
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-200 layout-<?= h($layout) ?> palette-<?= h($palette) ?>">
 <?= setting('tracking_body_html') ?>
 <header class="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/75 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/75">
     <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">

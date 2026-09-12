@@ -227,8 +227,9 @@ See Section 6.3.
 | Public locale | ID or EN for the blog | admin | |
 | Public theme default | Light or Dark | admin | Visitors may override |
 | Template style | Maps to layout (`classic` → newspaper, `magazine` → magazine) | admin | Kept for older copies |
-| Homepage layout | magazine, tech, bento, newspaper, masonry | admin | |
-| Color palette | slate, crimson, emerald, violet, amber, mono | admin | Also writes primary/accent |
+| Homepage layout | magazine, tech, bento, newspaper, masonry | admin | Synced from active_template |
+| Color palette | slate, crimson, emerald, violet, amber, mono | admin | Synced from active_template |
+| Active template | `01`–`30` (5 layouts × 6 palettes) | admin | Settings → Appearance |
 | Colors (primary, accent) | Appearance | admin | Synced from palette |
 | Posts per page | Homepage pagination | admin | |
 | Homepage intro | HTML/text above the list | admin | |

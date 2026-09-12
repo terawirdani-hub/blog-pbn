@@ -19,7 +19,7 @@ Key/value table `settings`. Never add a new operational constant in PHP. Default
 
 ## Templates
 
-`templates/*.php` plus `templates/layouts/` and `templates/partials/`. Homepage layout and palette come from settings (`homepage_layout`, `color_palette`; 5×6 = 30 presets). Legacy `template_style` (`classic` | `magazine`) still maps if the new keys are empty. SEO head tags, JSON-LD, sitemap, and RSS are built in `includes/seo.php`.
+`templates/*.php` plus `templates/layouts/` and `templates/partials/`. The public homepage reads `active_template` (`01`–`30`) from settings, which maps to `homepage_layout` + `color_palette` (5×6 presets). Legacy `template_style` still maps if those keys are empty.
 
 ## Logging
 

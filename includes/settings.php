@@ -11,6 +11,7 @@ function setting_defaults(): array
         'template_style' => ['value' => 'magazine', 'secret' => 0],
         'homepage_layout' => ['value' => 'magazine', 'secret' => 0],
         'color_palette' => ['value' => 'slate', 'secret' => 0],
+        'active_template' => ['value' => '', 'secret' => 0],
         'primary_color' => ['value' => '#2563eb', 'secret' => 0],
         'accent_color' => ['value' => '#0f172a', 'secret' => 0],
         'logo_path' => ['value' => '', 'secret' => 0],
