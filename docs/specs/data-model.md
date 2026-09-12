@@ -39,6 +39,17 @@ SQLite. Timestamps are UTC ISO-8601 (`Y-m-d H:i:s`).
 | robots_index | INTEGER | 1 index, 0 noindex |
 | published_at | TEXT | null until first publish |
 | author_id | INTEGER | |
+| category_id | INTEGER | FK categories, nullable |
+| created_at, updated_at | TEXT | |
+
+## categories
+
+| Column | Type | Notes |
+|--------|------|--------|
+| id | INTEGER PK | |
+| name | TEXT | |
+| slug | TEXT UNIQUE | public `/category/{slug}` |
+| color | TEXT | hex badge color |
 | created_at, updated_at | TEXT | |
 
 ## blogroll

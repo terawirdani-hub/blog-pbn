@@ -5,7 +5,7 @@ require __DIR__ . '/_init.php';
 $user = require_role('admin');
 
 $tab = (string) ($_GET['tab'] ?? 'general');
-$allowedTabs = ['general', 'appearance', 'ads', 'tracking', 'seo'];
+$allowedTabs = ['general', 'appearance', 'author', 'ads', 'tracking', 'seo'];
 if (!in_array($tab, $allowedTabs, true)) {
     $tab = 'general';
 }
@@ -75,6 +75,33 @@ if (is_post()) {
                 }
                 setting_set($k, $v, $uid);
             }
+        } elseif ($tab === 'author') {
+            $avatar = setting('author_avatar_path');
+            if (!empty($_FILES['author_avatar']) && is_array($_FILES['author_avatar'])) {
+                $stored = store_uploaded_image($_FILES['author_avatar'], 'author');
+                if ($stored !== '') {
+                    $avatar = $stored;
+                }
+            }
+            $socialKeys = ['social_twitter', 'social_github', 'social_linkedin', 'social_instagram', 'social_facebook'];
+            $map = [
+                'author_name' => trim((string) ($_POST['author_name'] ?? '')),
+                'author_bio' => trim((string) ($_POST['author_bio'] ?? '')),
+                'author_avatar_path' => $avatar,
+            ];
+            foreach ($socialKeys as $k) {
+                $url = trim((string) ($_POST[$k] ?? ''));
+                if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
+                    $url = '';
+                }
+                $map[$k] = $url;
+            }
+            foreach ($map as $k => $v) {
+                if (setting($k) !== $v) {
+                    $changed[] = $k;
+                }
+                setting_set($k, $v, $uid);
+            }
         } elseif ($tab === 'ads') {
             foreach (['ad_header_html', 'ad_sidebar_html', 'ad_in_article_html', 'ad_footer_html'] as $k) {
                 $v = (string) ($_POST[$k] ?? '');
@@ -124,6 +151,7 @@ admin_layout_start(t('settings.title'), 'settings');
 <nav class="tabs">
     <?= tab_link('general', $tab) ?>
     <?= tab_link('appearance', $tab) ?>
+    <?= tab_link('author', $tab) ?>
     <?= tab_link('ads', $tab) ?>
     <?= tab_link('tracking', $tab) ?>
     <?= tab_link('seo', $tab) ?>
@@ -172,6 +200,24 @@ admin_layout_start(t('settings.title'), 'settings');
         <div class="field"><label><?= field_label('settings.favicon', 'favicon') ?></label>
             <?php if (setting('favicon_path')): ?><p class="muted"><?= h(setting('favicon_path')) ?></p><?php endif; ?>
             <input type="file" name="favicon" accept="image/jpeg,image/png,image/gif,image/webp"></div>
+    <?php elseif ($tab === 'author'): ?>
+        <div class="field"><label><?= field_label('settings.author_name', 'author_name') ?></label>
+            <input type="text" name="author_name" value="<?= h(setting('author_name')) ?>"></div>
+        <div class="field"><label><?= field_label('settings.author_bio', 'author_bio') ?></label>
+            <textarea name="author_bio"><?= h(setting('author_bio')) ?></textarea></div>
+        <div class="field"><label><?= field_label('settings.author_avatar', 'author_avatar') ?></label>
+            <?php if (setting('author_avatar_path')): ?><p class="muted"><?= h(setting('author_avatar_path')) ?></p><?php endif; ?>
+            <input type="file" name="author_avatar" accept="image/jpeg,image/png,image/gif,image/webp"></div>
+        <div class="field"><label><?= field_label('settings.social_twitter', 'social_twitter') ?></label>
+            <input type="url" name="social_twitter" value="<?= h(setting('social_twitter')) ?>"></div>
+        <div class="field"><label><?= field_label('settings.social_github', 'social_github') ?></label>
+            <input type="url" name="social_github" value="<?= h(setting('social_github')) ?>"></div>
+        <div class="field"><label><?= field_label('settings.social_linkedin', 'social_linkedin') ?></label>
+            <input type="url" name="social_linkedin" value="<?= h(setting('social_linkedin')) ?>"></div>
+        <div class="field"><label><?= field_label('settings.social_instagram', 'social_instagram') ?></label>
+            <input type="url" name="social_instagram" value="<?= h(setting('social_instagram')) ?>"></div>
+        <div class="field"><label><?= field_label('settings.social_facebook', 'social_facebook') ?></label>
+            <input type="url" name="social_facebook" value="<?= h(setting('social_facebook')) ?>"></div>
     <?php elseif ($tab === 'ads'): ?>
         <div class="field"><label><?= field_label('settings.ad_header', 'ad_header') ?></label>
             <textarea name="ad_header_html"><?= h(setting('ad_header_html')) ?></textarea></div>

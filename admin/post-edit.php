@@ -32,6 +32,14 @@ if (is_post()) {
     $robots = isset($_POST['robots_index']) ? 1 : 0;
     $image = $post['featured_image'] ?? '';
     $og = trim((string) ($_POST['og_image'] ?? ($post['og_image'] ?? '')));
+    $categoryId = (int) ($_POST['category_id'] ?? 0);
+    if ($categoryId > 0) {
+        $cst = db()->prepare('SELECT id FROM categories WHERE id = ?');
+        $cst->execute([$categoryId]);
+        if (!$cst->fetch()) {
+            $categoryId = 0;
+        }
+    }
 
     if ($title === '') {
         $error = t('ui.required');
@@ -65,12 +73,12 @@ if (is_post()) {
                 $st = db()->prepare(
                     'UPDATE posts SET title=?, slug=?, excerpt=?, content=?, featured_image=?, status=?,
                      seo_title=?, seo_description=?, seo_keywords=?, canonical_url=?, og_image=?,
-                     robots_index=?, published_at=?, updated_at=? WHERE id=?'
+                     robots_index=?, published_at=?, updated_at=?, category_id=? WHERE id=?'
                 );
                 $st->execute([
                     $title, $slug, $excerpt, $content, $image, $status,
                     $seoTitle, $seoDesc, $seoKeys, $canonical, $og,
-                    $robots, $publishedAt, $now, $id,
+                    $robots, $publishedAt, $now, $categoryId > 0 ? $categoryId : null, $id,
                 ]);
                 $action = $status === 'published' ? 'post.publish' : 'post.update';
                 audit_write($action, 'post', (string) $id, ['title' => $title, 'status' => $status]);
@@ -93,6 +101,7 @@ if (is_post()) {
                     'author_id' => (int) $user['id'],
                     'created_at' => $now,
                     'updated_at' => $now,
+                    'category_id' => $categoryId > 0 ? $categoryId : null,
                 ]);
                 audit_write($status === 'published' ? 'post.publish' : 'post.create', 'post', (string) $newId, ['title' => $title]);
             }
@@ -116,10 +125,12 @@ if (is_post()) {
         'og_image' => $og,
         'robots_index' => $robots,
         'featured_image' => $image,
+        'category_id' => $categoryId,
     ]);
 }
 
 $pageTitle = $post ? t('posts.edit') : t('posts.new');
+$categories = db()->query('SELECT id, name FROM categories ORDER BY name ASC')->fetchAll();
 admin_layout_start($pageTitle, 'posts');
 ?>
 <h1><?= h($pageTitle) ?></h1>
@@ -155,6 +166,15 @@ admin_layout_start($pageTitle, 'posts');
         <select name="status">
             <option value="draft" <?= (($post['status'] ?? 'draft') === 'draft') ? 'selected' : '' ?>><?= h(t('posts.status.draft')) ?></option>
             <option value="published" <?= (($post['status'] ?? '') === 'published') ? 'selected' : '' ?>><?= h(t('posts.status.published')) ?></option>
+        </select>
+    </div>
+    <div class="field">
+        <label><?= field_label('posts.field.category', 'category') ?></label>
+        <select name="category_id">
+            <option value="0">—</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?= (int) $cat['id'] ?>" <?= (int) ($post['category_id'] ?? 0) === (int) $cat['id'] ? 'selected' : '' ?>><?= h($cat['name']) ?></option>
+            <?php endforeach; ?>
         </select>
     </div>
     <div class="field">

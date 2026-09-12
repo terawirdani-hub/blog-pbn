@@ -10,9 +10,17 @@ function sanitize_post_html(string $html): string
     return $html;
 }
 
+function is_reserved_public_slug(string $slug): bool
+{
+    return in_array($slug, ['admin', 'page', 'category', 'uploads', 'assets', 'sitemap.xml', 'robots.txt'], true);
+}
+
 function unique_post_slug(PDO $pdo, string $base, ?int $ignoreId = null): string
 {
     $slug = slugify($base);
+    if (is_reserved_public_slug($slug)) {
+        $slug = 'post-' . $slug;
+    }
     $candidate = $slug;
     for ($i = 1; $i <= 50; $i++) {
         if ($ignoreId === null) {
@@ -35,12 +43,15 @@ function insert_post_with_slug(PDO $pdo, array $fields): int
     $sql = 'INSERT INTO posts (
         title, slug, excerpt, content, featured_image, status,
         seo_title, seo_description, seo_keywords, canonical_url, og_image,
-        robots_index, published_at, author_id, created_at, updated_at
+        robots_index, published_at, author_id, created_at, updated_at, category_id
     ) VALUES (
         :title, :slug, :excerpt, :content, :featured_image, :status,
         :seo_title, :seo_description, :seo_keywords, :canonical_url, :og_image,
-        :robots_index, :published_at, :author_id, :created_at, :updated_at
+        :robots_index, :published_at, :author_id, :created_at, :updated_at, :category_id
     )';
+    if (!array_key_exists('category_id', $fields)) {
+        $fields['category_id'] = null;
+    }
     $st = $pdo->prepare($sql);
     $slug = $fields['slug'];
     for ($i = 0; $i < 20; $i++) {

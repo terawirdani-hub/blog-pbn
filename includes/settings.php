@@ -24,6 +24,14 @@ function setting_defaults(): array
         'tracking_body_html' => ['value' => '', 'secret' => 1],
         'robots_txt' => ['value' => "User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: {base}/sitemap.xml\n", 'secret' => 0],
         'comments_enabled' => ['value' => '0', 'secret' => 0],
+        'author_name' => ['value' => '', 'secret' => 0],
+        'author_bio' => ['value' => '', 'secret' => 0],
+        'author_avatar_path' => ['value' => '', 'secret' => 0],
+        'social_twitter' => ['value' => '', 'secret' => 0],
+        'social_github' => ['value' => '', 'secret' => 0],
+        'social_linkedin' => ['value' => '', 'secret' => 0],
+        'social_instagram' => ['value' => '', 'secret' => 0],
+        'social_facebook' => ['value' => '', 'secret' => 0],
     ];
 }
 

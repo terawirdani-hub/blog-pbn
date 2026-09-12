@@ -110,5 +110,18 @@ CREATE INDEX idx_audit_created ON audit_log (created_at);
 CREATE INDEX idx_login_attempts_lookup ON login_attempts (ip, username, attempted_at);
 SQL
         ,
+        2 => <<<'SQL'
+CREATE TABLE categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    color TEXT NOT NULL DEFAULT '#2563eb',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+ALTER TABLE posts ADD COLUMN category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
+CREATE INDEX idx_posts_category ON posts (category_id);
+SQL
+        ,
     ];
 }

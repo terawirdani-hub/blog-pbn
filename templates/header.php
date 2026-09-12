@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 $theme = public_theme();
-$style = setting('template_style', 'classic') === 'magazine' ? 'magazine' : 'classic';
 $primary = setting('primary_color', '#1f6feb');
 $accent = setting('accent_color', '#238636');
 $siteName = setting('site_name');
@@ -10,15 +9,17 @@ $tagline = setting('site_tagline');
 $logo = setting('logo_path');
 $favicon = setting('favicon_path');
 $toggleTo = $theme === 'dark' ? 'light' : 'dark';
-$toggleUrl = request_path() . '?theme=' . $toggleTo;
+$toggleUrl = theme_toggle_url();
+$navCategories = categories_with_counts();
+$isDark = $theme === 'dark';
 header('Content-Type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
-<html lang="<?= h(locale()) ?>" data-theme="<?= h($theme) ?>">
+<html lang="<?= h(locale()) ?>" class="<?= $isDark ? 'dark' : '' ?>" data-theme="<?= h($theme) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= h(($title ?? $siteName) . ' — ' . $siteName) ?></title>
+    <title><?= h(($title ?? $siteName) . (isset($title) && $title !== $siteName ? ' — ' . $siteName : '')) ?></title>
     <?php if (!empty($description)): ?>
         <meta name="description" content="<?= h($description) ?>">
     <?php endif; ?>
@@ -29,36 +30,75 @@ header('Content-Type: text/html; charset=utf-8');
         <link rel="canonical" href="<?= h($canonical) ?>">
     <?php endif; ?>
     <?php if (!empty($og)): ?>
-        <meta property="og:image" content="<?= h(str_starts_with($og, 'http') ? $og : url_path($og)) ?>">
+        <meta property="og:image" content="<?= h(str_starts_with((string) $og, 'http') ? $og : url_path((string) $og)) ?>">
     <?php endif; ?>
     <?php if ($favicon !== ''): ?>
-        <link rel="icon" href="<?= h(url_path($favicon)) ?>">
+        <link rel="icon" href="<?= h(media_url($favicon)) ?>">
     <?php endif; ?>
-    <link rel="stylesheet" href="<?= h(url_path('assets/css/tokens.css')) ?>">
-    <link rel="stylesheet" href="<?= h(url_path('assets/css/public.css')) ?>">
-    <style>:root { --primary: <?= h($primary) ?>; --accent: <?= h($accent) ?>; }</style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
+            maxWidth: { '7xl': '80rem' }
+          }
+        }
+      }
+    </script>
+    <style>
+      :root { --brand: <?= h($primary) ?>; --accent: <?= h($accent) ?>; }
+      html { scroll-behavior: smooth; }
+    </style>
     <?= setting('tracking_head_html') ?>
 </head>
-<body class="public style-<?= h($style) ?>">
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-200">
 <?= setting('tracking_body_html') ?>
-<header class="site-header">
-    <div class="wrap head-row">
-        <a class="logo" href="<?= h(url_path()) ?>">
+<header class="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/75 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/75">
+    <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <a href="<?= h(url_path()) ?>" class="group flex min-w-0 items-center gap-3">
             <?php if ($logo !== ''): ?>
-                <img src="<?= h(url_path($logo)) ?>" alt="<?= h($siteName) ?>">
+                <img src="<?= h(media_url($logo)) ?>" alt="<?= h($siteName) ?>" class="h-9 w-auto max-w-[160px] object-contain">
             <?php else: ?>
-                <?= h($siteName) ?>
+                <span class="truncate text-lg font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-xl"><?= h($siteName) ?></span>
             <?php endif; ?>
         </a>
-        <?php if ($tagline !== ''): ?><span class="tagline"><?= h($tagline) ?></span><?php endif; ?>
-        <nav class="head-nav">
-            <a href="<?= h(url_path()) ?>"><?= h(t('public.home')) ?></a>
-            <a href="<?= h($toggleUrl) ?>"><?= h(t('public.theme_toggle')) ?></a>
+        <nav class="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto md:flex" aria-label="<?= h(t('public.categories')) ?>">
+            <a href="<?= h(url_path()) ?>" class="shrink-0 rounded-full px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"><?= h(t('public.home')) ?></a>
+            <?php foreach ($navCategories as $cat): ?>
+                <a href="<?= h(url_path('category/' . $cat['slug'])) ?>" class="shrink-0 rounded-full px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"><?= h($cat['name']) ?></a>
+            <?php endforeach; ?>
         </nav>
+        <div class="ml-auto flex items-center gap-2">
+            <a href="<?= h($toggleUrl) ?>"
+               class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+               title="<?= h(t('public.theme_toggle')) ?>"
+               aria-label="<?= h(t('public.theme_toggle')) ?>">
+                <?php if ($isDark): ?>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25M12 18.75V21M4.219 4.219l1.591 1.591M18.19 18.19l1.59 1.591M3 12h2.25M18.75 12H21M4.219 19.781l1.591-1.591M18.19 5.81l1.59-1.591M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+                <?php else: ?>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                <?php endif; ?>
+            </a>
+        </div>
     </div>
+    <?php if ($navCategories): ?>
+    <nav class="flex gap-2 overflow-x-auto border-t border-zinc-100 px-4 py-2 md:hidden dark:border-zinc-800" aria-label="<?= h(t('public.categories')) ?>">
+        <a href="<?= h(url_path()) ?>" class="shrink-0 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"><?= h(t('public.home')) ?></a>
+        <?php foreach ($navCategories as $cat): ?>
+            <a href="<?= h(url_path('category/' . $cat['slug'])) ?>" class="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300" style="background: <?= h($cat['color']) ?>22; color: <?= h($cat['color']) ?>"><?= h($cat['name']) ?></a>
+        <?php endforeach; ?>
+    </nav>
+    <?php endif; ?>
 </header>
 <?php if (setting('ad_header_html') !== ''): ?>
-    <div class="wrap ad-slot"><?= setting('ad_header_html') ?></div>
+    <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8"><?= setting('ad_header_html') ?></div>
 <?php endif; ?>
-<div class="wrap layout">
-    <div class="content">
+<div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-8 sm:px-6 lg:grid-cols-10 lg:gap-12 lg:px-8 lg:py-12">
+    <div class="min-w-0 lg:col-span-7">

@@ -8,4 +8,5 @@
 | Bootstrap config | `config.php` values that only start the app (paths, timezone, debug). |
 | Admin config | Settings stored in SQLite and edited in `/admin/settings.php`. |
 | Template style | Public layout variant: `classic` or `magazine`. |
+| Category | Topic grouping for posts, shown as colored badges. |
 | Fail closed | On doubt or error, refuse the write or hide the content. |

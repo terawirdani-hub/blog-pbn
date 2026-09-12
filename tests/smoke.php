@@ -69,6 +69,7 @@ require $root . '/includes/audit.php';
 require $root . '/includes/auth.php';
 require $root . '/includes/upload.php';
 require $root . '/includes/html.php';
+require $root . '/includes/frontend.php';
 
 session_start();
 $pdo = db();

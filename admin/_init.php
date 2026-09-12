@@ -34,6 +34,7 @@ function admin_layout_start(string $title, string $active = ''): void
         <nav>
             <a class="<?= $active === 'dash' ? 'is-on' : '' ?>" href="<?= h(admin_url('index.php')) ?>"><?= h(t('nav.dashboard')) ?></a>
             <a class="<?= $active === 'posts' ? 'is-on' : '' ?>" href="<?= h(admin_url('posts.php')) ?>"><?= h(t('nav.posts')) ?></a>
+            <a class="<?= $active === 'categories' ? 'is-on' : '' ?>" href="<?= h(admin_url('categories.php')) ?>"><?= h(t('nav.categories')) ?></a>
             <a class="<?= $active === 'blogroll' ? 'is-on' : '' ?>" href="<?= h(admin_url('blogroll.php')) ?>"><?= h(t('nav.blogroll')) ?></a>
             <?php if ($user['role'] === 'admin'): ?>
             <a class="<?= $active === 'settings' ? 'is-on' : '' ?>" href="<?= h(admin_url('settings.php')) ?>"><?= h(t('nav.settings')) ?></a>

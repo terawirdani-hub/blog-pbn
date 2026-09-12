@@ -5,7 +5,7 @@
 1. Apache (or `router.php`) sends public URLs to `index.php`.
 2. `includes/bootstrap.php` loads `config.php`, starts a secure session, opens SQLite, runs migrations, loads settings and i18n.
 3. Admin scripts live under `admin/` as discrete PHP pages (not a framework router).
-4. Public routes: `/`, `/page/{n}`, `/{slug}`, `/sitemap.xml`, `/robots.txt`.
+4. Public routes: `/`, `/page/{n}`, `/category/{slug}`, `/{slug}`, `/sitemap.xml`, `/robots.txt`.
 
 ## Persistence
 

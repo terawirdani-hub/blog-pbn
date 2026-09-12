@@ -209,7 +209,7 @@ See Section 6.3.
 
 ### 8.4 Design Direction
 
-- Modern, clean, readable blog. Two public layout styles: **classic** and **magazine** (switch in Settings).
+- Modern, clean, editorial public site (Tailwind). One public layout: featured story + two-column feed + sticky sidebar. The classic/magazine setting is kept in admin for compatibility and does not switch public CSS.
 
 ### 8.5 User-Friendly Error Messages
 
@@ -227,13 +227,16 @@ See Section 6.3.
 | Logo, favicon | Appearance | admin | Uploads |
 | Public locale | ID or EN for the blog | admin | |
 | Public theme default | Light or Dark | admin | Visitors may override |
-| Template style | classic / magazine | admin | |
+| Template style | Reserved (classic / magazine) | admin | Public layout is the editorial theme |
 | Posts per page | Homepage pagination | admin | |
 | Homepage intro | HTML/text above the list | admin | |
 | Ad slots | Header / sidebar / in-article / footer HTML | admin | Raw HTML |
 | Tracking | Head / body snippet | admin | Raw HTML, admin-only |
 | Robots.txt body | Crawler rules | admin | Served at `/robots.txt` |
 | Feature: comments | Reserved flag (off in v1) | admin | |
+| Author name, bio, avatar | Sidebar author card | admin | |
+| Social profile URLs | Author card links | admin | |
+| Categories | Names, slugs, badge colors | admin/editor | Assigned on each post |
 
 ---
 
@@ -244,13 +247,13 @@ Resolved 2026-09-12:
 - **Stack:** PHP 8.0+ / SQLite / Apache (see Section 3).
 - **Layout:** repository = deployable site + `docs/` (see Section 4).
 - **Deploy:** ZIP to document root; local `php -S localhost:8080 router.php`.
+- **Categories:** shipped with the editorial frontend (admin + `/category/{slug}`).
 
 Still open (do not implement until discussed):
 
 - Comment system
-- Categories / tags
-- Multi-author public bylines beyond the editor role
 - Extra paid template packs
+- Multi-author public bylines beyond the site author card
 
 ---
 
